@@ -22,7 +22,7 @@
   [(range 0 8)
    (range 16 24)
    (range 32 40)
-   (range 40 56)
+   (range 48 56)
    (range 64 72)
    (range 80 88)
    (range 96 104)
@@ -70,18 +70,17 @@
       (midi-fn rcvr led-id full-brightness))))
 
 (defn intromation [rcvr]
-  (midi-note-on rcvr (cordinate-to-note 0 0) full-brightness)
-  (midi-note-on rcvr (cordinate-to-note 7 0) full-brightness)
-  (midi-note-on rcvr (cordinate-to-note 0 7) full-brightness)
-  (midi-note-on rcvr (cordinate-to-note 7 7) full-brightness)
-
-  (Thread/sleep 300)
-  (midi-control rcvr all-lights 125)
-  (Thread/sleep 300)
-  (midi-control rcvr all-lights 126)
-  (Thread/sleep 300)
+  (doseq [row (range 0 8)]
+    (doseq [col (range 0 8)]
+      (midi-note-on rcvr (cordinate-to-note col row) full-brightness))
+    (Thread/sleep 100))
   (midi-control rcvr all-lights 127)
-  (Thread/sleep 300)
+  (Thread/sleep 400)
+  (doseq [row (reverse (range 0 8))]
+    (doseq [col (reverse (range 0 8))]
+      (midi-note-on rcvr (cordinate-to-note col row) off))
+    (Thread/sleep 100))
+  (Thread/sleep 100)
   (reset-launchpad rcvr))
 
 (comment
