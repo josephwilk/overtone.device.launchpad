@@ -19,6 +19,12 @@
 (def medium-brightness 2)
 (def full-brightness   3)
 
+(def led-colors [:red :green :yellow])
+
+(def flags {:normal 12
+            :flash 8
+            :double-buffering 0})
+
 (def grid-notes
   [(range 0 8)
    (range 16 24)
@@ -54,13 +60,31 @@
                       :stop    {:note 72  :fn midi-note-on}
                       :trkon   {:note 88  :fn midi-note-on}
                       :solo    {:note 104 :fn midi-note-on}
-                      :arm     {:note 120 :fn midi-note-on}}}}})
+                      :arm     {:note 120 :fn midi-note-on}}
+           :grid {:fn midi-note-on}}}})
 
 (defn reset-launchpad [rcvr] (midi-control rcvr 0 0))
 
+(defn velocity [{color :color intensity :intensity}]
+  (if (some #{color} led-colors)
+    (let [intensity (if (> intensity 3) 3 intensity)
+          green (case color
+                  :green intensity
+                  :yellow intensity
+                  0)
+          red (case color
+                :red intensity
+                :yellow intensity
+                0)
+          mode :normal]
+      (+ (* 16 green)
+         red
+         (mode flags)))
+    0))
+
 (defn- led-details [id]
   (if (vector? id)
-    {:note (apply cordinate-to-note id) :fn midi-note-on}
+    {:note (apply cordinate-to-note id) :fn (-> launchpad-config :interfaces :leds :grid :fn)}
     (-> launchpad-config :interfaces :leds :controls id)))
 
 (defn- led-off
@@ -69,24 +93,24 @@
     (midi-fn rcvr led-id off)))
 
 (defn- led-on
-  ([rcvr id] (led-on rcvr id full-brightness))
-  ([rcvr id brightness]
+  ([rcvr id] (led-on rcvr id full-brightness :red))
+  ([rcvr id brightness color]
      (when-let [{led-id :note midi-fn :fn} (led-details id)]
-       (midi-fn rcvr led-id brightness))))
+       (midi-fn rcvr led-id (velocity {:color color
+                                       :intensity brightness})))))
 
 (defn intromation [rcvr]
   (doseq [row (range 0 8)]
     (doseq [intensity (range 1 4)]
-      (doseq [col (range 0 8)] (led-on rcvr [col row] intensity))
+      (doseq [col (range 0 8)] (led-on rcvr [col row] intensity :red))
       (Thread/sleep 50))
-    (doseq [col (range 0 8)] (led-on rcvr [col row] 3))
-    (Thread/sleep 50))
+    (Thread/sleep (/ 50 (+ 1 row))))
   (midi-control rcvr all-lights 127)
   (Thread/sleep 400)
   (doseq [row (reverse (range 0 8))]
     (doseq [col (reverse (range 0 8))]
       (led-off rcvr [col row]))
-    (Thread/sleep 100))
+    (Thread/sleep 50))
   (reset-launchpad rcvr))
 
 (comment
