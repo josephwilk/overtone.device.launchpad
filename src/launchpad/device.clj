@@ -132,18 +132,7 @@
 (defn stateful-launchpad
   [device]
   (let [interfaces (-> launchpad-config :interfaces)
-        device-key    (midi-full-device-key device)
-        device-num    (midi-device-num device)
-        ;;TODO: State its a thing
-        state      (atom {})
-        ]
-    (doseq [[k v] (-> launchpad-config :interfaces :grid-controls :controls)]
-      (let [note      (:note v)
-            handle    (concat device-key [:control-change note])
-            update-fn (fn [{:keys [data2-f]}]
-                        (println :pressed)
-                        (swap! state assoc k data2-f))]
-        (on-event handle update-fn (str "update-state-for" handle))))
+        state      (atom {})] ;TODO: State its a thing
     {:dev        device
      :interfaces interfaces
      :state      state
