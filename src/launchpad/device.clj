@@ -135,10 +135,12 @@
 (defn stateful-launchpad
   [device]
   (let [interfaces (-> launchpad-config :interfaces)
-        state      (atom {:up    (grid/new)
+        state      (atom {:active :up
+                          :up    (grid/new)
                           :down  (grid/new)
                           :left  (grid/new)
-                          :right (grid/new)})]
+                          :right (grid/new)})
+        device-key    (midi-full-device-key device)]
     {:dev        device
      :interfaces interfaces
      :state      state
@@ -151,6 +153,26 @@
         device-key (midi-full-device-key (:dev device))
         device-num (midi-device-num      (:dev device))
         state      (:state device)]
+
+    (doseq [[x row] (map vector (iterate inc 0) grid-notes)
+            [y note] (map vector (iterate inc 0) row)]
+      (let [type      :note-on
+            note      note
+            handle    (concat device-key [type note])
+            update-fn (fn [{:keys [data2-f]}]
+                        (let [active (:active @state)
+                              grid (active @state)
+                              old-row (-> grid (nth x) (vec))
+                              old-cell (nth old-row y)
+                              new-row (assoc old-row y (if (= 1 old-cell) 0 1))
+                              new-grid (assoc (vec grid) x new-row)]
+                          (if (= 0 old-cell)
+                            (led-on* launchpad [x y])
+                            (led-off* launchpad [x y]))
+                          (swap! state assoc active new-grid)))]
+        (println :handle handle)
+        (on-event handle update-fn (str "update-state-for" handle))))
+
     (doseq [[k v] (-> launchpad-config :interfaces :grid-controls :controls)]
       (let [type      (:type v)
             note      (:note v)
