@@ -26,7 +26,6 @@
               (fn [m] (s/right-mode (:launchpad m)))
               ::right-mode))
 
-
 (comment
   (boot!)
   (use 'overtone.live)

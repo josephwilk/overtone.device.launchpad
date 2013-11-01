@@ -163,6 +163,3 @@
   [rcvs stateful-devs]
   (intromation (first rcvs))
   [(register-event-handlers-for-launchpad (first stateful-devs) (first rcvs) 0)])
-
-(comment
-  (intromation (first launchpad-connected-receivers)))

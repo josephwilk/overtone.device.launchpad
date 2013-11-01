@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/josephwilk/overtone.device.launchpad.png)](https://travis-ci.org/josephwilk/overtone.device.launchpad)
 
-A Clojure library for using the LaunchPad with Overtone.
+Experimenting with ways of interacting a Launchpad with Overtone and Clojure.
 
 ![Launchpad S](http://s10.postimg.org/mj3szi1i1/launchpad_s.jpg)
 
