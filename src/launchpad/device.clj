@@ -45,15 +45,6 @@
                                  :user1   {:note 109 :type :control-change}
                                  :user2   {:note 110 :type :control-change}
                                  :mixer   {:note 111 :type :control-change}
-
-                                 :vol     {:note 8   :type :note-on}
-                                 :pan     {:note 24  :type :note-on}
-                                 :snda    {:note 40  :type :note-on}
-                                 :sndb    {:note 56  :type :note-on}
-                                 :stop    {:note 72  :type :note-on}
-                                 :trkon   {:note 88  :type :note-on}
-                                 :solo    {:note 104 :type :note-on}
-                                 :arm     {:note 120 :type :note-on}
                                  }}
 
                 :leds {:name "LEDs"
@@ -108,12 +99,20 @@
   (when-let [{led-id :note midi-fn :fn} (led-details id)]
     (midi-fn rcvr led-id off)))
 
+(defn led-off*
+  [launchpad id]
+  (let [rcvr (-> launchpad :rcv)]
+    (led-off rcvr id)))
+
 (defn- led-on
   ([rcvr id] (led-on rcvr id full-brightness :red))
   ([rcvr id brightness color]
      (when-let [{led-id :note midi-fn :fn} (led-details id)]
        (midi-fn rcvr led-id (velocity {:color color
                                        :intensity brightness})))))
+(defn led-on* [launchpad id]
+  (let [rcvr (-> launchpad :rcv)]
+    (led-on rcvr id)))
 
 (defn intromation [rcvr]
   (doseq [row (range 0 8)]
@@ -132,13 +131,13 @@
 (defn stateful-launchpad
   [device]
   (let [interfaces (-> launchpad-config :interfaces)
-        state      (atom {})] ;TODO: State its a thing
+        state      (atom {:up [[] [] [] [] [] [] []]})] ;TODO: State its a thing
     {:dev        device
      :interfaces interfaces
      :state      state
      :type       ::stateful-launchpad}))
 
-(defn- mk-launchpad
+(defn- register-event-handlers-for-launchpad
   [device rcv idx]
   (let [launchpad  (map->Launchpad (assoc device :rcv rcv))
         interfaces (:interfaces device)
@@ -150,7 +149,12 @@
             note      (:note v)
             handle    (concat device-key [type note])
             update-fn (fn [{:keys [data2-f]}]
-                        (event ["Launchpad S" type idx k]))]
+                        (event [:Launchpad :control idx k]
+                               :val data2-f
+                               :id k
+                               :launchpad launchpad
+                               :idx idx))]
+        (println :handle handle)
         (on-event handle update-fn (str "update-state-for" handle))))
     launchpad))
 
@@ -158,7 +162,7 @@
   "Fixed with a single launchpad for now"
   [rcvs stateful-devs]
   (intromation (first rcvs))
-  [(mk-launchpad (first stateful-devs) (first rcvs) 0)])
+  [(register-event-handlers-for-launchpad (first stateful-devs) (first rcvs) 0)])
 
 (comment
   (intromation (first launchpad-connected-receivers)))
