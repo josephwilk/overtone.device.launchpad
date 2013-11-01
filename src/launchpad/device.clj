@@ -112,11 +112,11 @@
     (led-on rcvr id)))
 
 (defn render-grid [launchpad grid]
-  (doseq [row grid x (range 0 9)]
-    (doseq [col row y (range 0 9)]
+  (doseq [[x row] (map vector (iterate inc 0) grid)]
+    (doseq [[y col] (map vector (iterate inc 0) row)]
       (if (= 1 col)
-        (led-on launchpad [x y])
-        (led-off launchpad [x y])))))
+        (led-on* launchpad [x y])
+        (led-off* launchpad [x y])))))
 
 (defn intromation [rcvr]
   (doseq [row (range 0 8)]
@@ -135,8 +135,10 @@
 (defn stateful-launchpad
   [device]
   (let [interfaces (-> launchpad-config :interfaces)
-        state      (atom {:up   (grid/new)
-                          :down (grid/new)})]
+        state      (atom {:up    (grid/new)
+                          :down  (grid/new)
+                          :left  (grid/new)
+                          :right (grid/new)})]
     {:dev        device
      :interfaces interfaces
      :state      state

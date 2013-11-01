@@ -2,11 +2,13 @@
 
 (defn new []
   ;;Random for visual testing of changing grid
-  [[(rand-int 2) (rand-int 2) (rand-int 2) (rand-int 2) (rand-int 2) (rand-int 2) (rand-int 2) (rand-int 2) (rand-int 2)]
-   [0 0 0 0 0 0 0 0]
-   [0 0 0 0 0 0 0 0]
-   [0 0 0 0 0 0 0 0]
-   [0 0 0 0 0 0 0 0]
-   [0 0 0 0 0 0 0 0]
-   [0 0 0 0 0 0 0 0]
-   [0 0 0 0 0 0 0 0]])
+  (map
+   (fn [row] (map (fn [_] (rand-int 2)) row))
+   [[0 0 0 0 0 0 0 0]
+    [0 0 0 0 0 0 0 0]
+    [0 0 0 0 0 0 0 0]
+    [0 0 0 0 0 0 0 0]
+    [0 0 0 0 0 0 0 0]
+    [0 0 0 0 0 0 0 0]
+    [0 0 0 0 0 0 0 0]
+    [0 0 0 0 0 0 0 0]]))
