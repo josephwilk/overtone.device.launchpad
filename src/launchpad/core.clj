@@ -29,4 +29,5 @@
 (comment
   (boot!)
   (use 'overtone.live)
-  (event-debug-on))
+  (event-debug-on)
+  (device/reset-launchpad (first launchpad-connected-receivers)))
