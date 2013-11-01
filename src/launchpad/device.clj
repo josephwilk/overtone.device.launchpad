@@ -116,15 +116,15 @@
   (reset-launchpad rcvr))
 
 (defn stateful-launchpad
-  [dev]
+  [device]
   (let [interfaces (-> launchpad-config :interfaces)
-        dev-key    (midi-full-device-key dev)
-        dev-num    (midi-device-num dev)
+        device-key    (midi-full-device-key device)
+        device-num    (midi-device-num device)
         state      (atom {})]
     (doseq [[k v] (-> launchpad-config :interfaces :input-controls :controls)]
       (let [type      (:type v)
             note      (:note v)
-            handle    (concat dev-key [:control-change note])
+            handle    (concat device-key [:control-change note])
             update-fn (fn [{:keys [data2-f]}]
                         (swap! state assoc k data2-f))]
         (cond
@@ -134,22 +134,22 @@
          (= :on-latest-event (default-event-type type))
          (on-latest-event handle update-fn (str "update-state-for" handle)))))
 
-    {:dev        dev
+    {:dev        device
      :interfaces interfaces
      :state      state
      :type       ::stateful-launchpad}))
 
 (defn- mk-launchpad
-  [dev rcv idx]
-  (let [nk (map->Launchpad (assoc dev :rcv rcv))
-        interfaces (:interfaces dev)
-        dev-key    (midi-full-device-key (:dev dev))
-        dev-num    (midi-device-num (:dev dev))
-        state      (:state dev)]
+  [device rcv idx]
+  (let [launchpad  (map->Launchpad (assoc device :rcv rcv))
+        interfaces (:interfaces device)
+        device-key (midi-full-device-key (:dev device))
+        device-num (midi-device-num      (:dev device))
+        state      (:state device)]
     (doseq [[k v] (-> launchpad-config :interfaces :input-controls :controls)]
       (let [type      (:type v)
             note      (:note v)
-            handle    (concat dev-key [:control-change note])
+            handle    (concat device-key [:control-change note])
             update-fn (fn [{:keys [data2-f]}]
                         (event [:LaunchpadS :control-change idx k]))]
 
@@ -159,8 +159,7 @@
 
          (= :on-latest-event (default-event-type type))
          (on-latest-event handle update-fn (str "update-state-for" handle)))))
-    nk))
-
+    launchpad))
 
 (defn merge-launchpad-kons
   "Fixed with a single launchpad for now"
@@ -169,7 +168,4 @@
   [(mk-launchpad (first stateful-devs) (first rcvs) 0)])
 
 (comment
-  (intromation (first launchpad-connected-receivers))
-  (led-on  (first launchpad-connected-receivers) :snda)
-  (led-off (first launchpad-connected-receivers) :snda)
-  (reset-launchpad (first launchpad-connected-receivers)))
+  (intromation (first launchpad-connected-receivers)))
