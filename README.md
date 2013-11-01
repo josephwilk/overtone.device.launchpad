@@ -8,6 +8,9 @@ Experimenting with ways of interacting a Launchpad with Overtone and Clojure.
 
 ## Usage
 
+Currently left, right, up and down select different states each of which has its own grid.
+Grid buttons simply toggle on/off.
+
 ```clojure
 (use 'launchpad.core)
 
