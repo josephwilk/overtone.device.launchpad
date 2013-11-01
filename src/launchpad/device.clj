@@ -32,38 +32,52 @@
    (range 96 104)
    (range 112 120)])
 
-(defn cordinate-to-note [x y] (nth (nth grid-notes x) y))
+(defn coordinate-to-note [x y] (nth (nth grid-notes x) y))
 
 (def launchpad-config
   {:name "Launchpad S"
-   :interfaces
-   {:leds {:name "LEDs"
-           :type :midi-out
-           :midi-handle "Launchpad S"
-           :control-defaults {:type :led}
-           :controls {:up      {:note 104 :fn midi-control}
-                      :down    {:note 105 :fn midi-control}
-                      :left    {:note 106 :fn midi-control}
-                      :right   {:note 107 :fn midi-control}
-                      :session {:note 108 :fn midi-control}
-                      :user1   {:note 109 :fn midi-control}
-                      :user2   {:note 110 :fn midi-control}
-                      :mixer   {:note 111 :fn midi-control}
+   :interfaces {:grid-controls {:controls
+                                {:up      {:note 104 :type :control-change}
+                                 :down    {:note 105 :type :control-change}
+                                 :left    {:note 106 :type :control-change}
+                                 :right   {:note 107 :type :control-change}
+                                 :session {:note 108 :type :control-change}
+                                 :user1   {:note 109 :type :control-change}
+                                 :user2   {:note 110 :type :control-change}
+                                 :mixer   {:note 111 :type :control-change}
 
-                      :vol     {:note 8   :fn midi-note-on}
-                      :pan     {:note 24  :fn midi-note-on}
-                      :snda    {:note 40  :fn midi-note-on}
-                      :sndb    {:note 56  :fn midi-note-on}
-                      :stop    {:note 72  :fn midi-note-on}
-                      :trkon   {:note 88  :fn midi-note-on}
-                      :solo    {:note 104 :fn midi-note-on}
-                      :arm     {:note 120 :fn midi-note-on}}
-           :grid {:fn midi-note-on}}}})
+                                 :vol     {:note 8   :type :note-on}
+                                 :pan     {:note 24  :type :note-on}
+                                 :snda    {:note 40  :type :note-on}
+                                 :sndb    {:note 56  :type :note-on}
+                                 :stop    {:note 72  :type :note-on}
+                                 :trkon   {:note 88  :type :note-on}
+                                 :solo    {:note 104 :type :note-on}
+                                 :arm     {:note 120 :type :note-on}
+                                 }}
 
-(def default-event-type
-  {:button :on-event
-   :slider :on-latest-event
-   :pot    :on-latest-event})
+                :leds {:name "LEDs"
+                       :type :midi-out
+                       :midi-handle "Launchpad S"
+                       :control-defaults {:type :led}
+                       :controls {:up      {:note 104 :fn midi-control}
+                                  :down    {:note 105 :fn midi-control}
+                                  :left    {:note 106 :fn midi-control}
+                                  :right   {:note 107 :fn midi-control}
+                                  :session {:note 108 :fn midi-control}
+                                  :user1   {:note 109 :fn midi-control}
+                                  :user2   {:note 110 :fn midi-control}
+                                  :mixer   {:note 111 :fn midi-control}
+
+                                  :vol     {:note 8   :fn midi-note-on}
+                                  :pan     {:note 24  :fn midi-note-on}
+                                  :snda    {:note 40  :fn midi-note-on}
+                                  :sndb    {:note 56  :fn midi-note-on}
+                                  :stop    {:note 72  :fn midi-note-on}
+                                  :trkon   {:note 88  :fn midi-note-on}
+                                  :solo    {:note 104 :fn midi-note-on}
+                                  :arm     {:note 120 :fn midi-note-on}}
+                       :grid {:fn midi-note-on}}}})
 
 (defn reset-launchpad [rcvr] (midi-control rcvr 0 0))
 
@@ -86,7 +100,7 @@
 
 (defn- led-details [id]
   (if (vector? id)
-    {:note (apply cordinate-to-note id) :fn (-> launchpad-config :interfaces :leds :grid :fn)}
+    {:note (apply coordinate-to-note id) :fn (-> launchpad-config :interfaces :leds :grid :fn)}
     (-> launchpad-config :interfaces :leds :controls id)))
 
 (defn- led-off
@@ -120,20 +134,16 @@
   (let [interfaces (-> launchpad-config :interfaces)
         device-key    (midi-full-device-key device)
         device-num    (midi-device-num device)
-        state      (atom {})]
-    (doseq [[k v] (-> launchpad-config :interfaces :input-controls :controls)]
-      (let [type      (:type v)
-            note      (:note v)
+        ;;TODO: State its a thing
+        state      (atom {})
+        ]
+    (doseq [[k v] (-> launchpad-config :interfaces :grid-controls :controls)]
+      (let [note      (:note v)
             handle    (concat device-key [:control-change note])
             update-fn (fn [{:keys [data2-f]}]
+                        (println :pressed)
                         (swap! state assoc k data2-f))]
-        (cond
-         (= :on-event (default-event-type type))
-         (on-event handle update-fn (str "update-state-for" handle))
-
-         (= :on-latest-event (default-event-type type))
-         (on-latest-event handle update-fn (str "update-state-for" handle)))))
-
+        (on-event handle update-fn (str "update-state-for" handle))))
     {:dev        device
      :interfaces interfaces
      :state      state
@@ -146,19 +156,13 @@
         device-key (midi-full-device-key (:dev device))
         device-num (midi-device-num      (:dev device))
         state      (:state device)]
-    (doseq [[k v] (-> launchpad-config :interfaces :input-controls :controls)]
+    (doseq [[k v] (-> launchpad-config :interfaces :grid-controls :controls)]
       (let [type      (:type v)
             note      (:note v)
-            handle    (concat device-key [:control-change note])
+            handle    (concat device-key [type note])
             update-fn (fn [{:keys [data2-f]}]
-                        (event [:LaunchpadS :control-change idx k]))]
-
-        (cond
-         (= :on-event (default-event-type type))
-         (on-event handle update-fn (str "update-state-for" handle))
-
-         (= :on-latest-event (default-event-type type))
-         (on-latest-event handle update-fn (str "update-state-for" handle)))))
+                        (event ["Launchpad S" type idx k]))]
+        (on-event handle update-fn (str "update-state-for" handle))))
     launchpad))
 
 (defn merge-launchpad-kons
