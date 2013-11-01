@@ -30,7 +30,7 @@
 
 (defn cordinate-to-note [x y] (nth (nth grid-notes x) y))
 
-(def nk-config
+(def launchpad-config
   {:name "Launchpad S"
    :interfaces
    {:leds {:name "LEDs"
@@ -59,14 +59,14 @@
 
 (defn- led-off
   [rcvr id]
-  (when-let [led-id (-> nk-config :interfaces :leds :controls id :note)]
-    (let [midi-fn (-> nk-config :interfaces :leds :controls id :fn)]
+  (when-let [led-id (-> launchpad-config :interfaces :leds :controls id :note)]
+    (let [midi-fn (-> launchpad-config :interfaces :leds :controls id :fn)]
       (midi-fn rcvr led-id off))))
 
 (defn- led-on
   [rcvr id]
-  (when-let [led-id (-> nk-config :interfaces :leds :controls id :note)]
-    (let [midi-fn (-> nk-config :interfaces :leds :controls id :fn)]
+  (when-let [led-id (-> launchpad-config :interfaces :leds :controls id :note)]
+    (let [midi-fn (-> launchpad-config :interfaces :leds :controls id :fn)]
       (midi-fn rcvr led-id full-brightness))))
 
 (defn intromation [rcvr]
