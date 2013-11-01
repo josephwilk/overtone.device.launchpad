@@ -1,9 +1,10 @@
 (ns launchpad.core
-  (:require [overtone.studio.midi :refer :all]
-            [overtone.libs.event :refer :all]))
+  (:require
+   [overtone.studio.midi :refer :all]
+   [overtone.libs.event :refer :all]))
 
-(defonce launchpad-connected-receivers (midi/midi-find-connected-receivers "Launchpad"))
-(defonce launchpad-connected-devices   (midi/midi-find-connected-devices "Launchpad"))
+(defonce launchpad-connected-receivers (midi-find-connected-receivers "Launchpad"))
+(defonce launchpad-connected-devices   (midi-find-connected-devices "Launchpad"))
 
 (defrecord Launchpad [rcv dev interfaces])
 
@@ -55,36 +56,41 @@
                       :solo    {:note 104 :fn midi-note-on}
                       :arm     {:note 120 :fn midi-note-on}}}}})
 
-(defn reset-launchpad [rcvr] (midi/midi-control rcvr 0 0))
+(defn reset-launchpad [rcvr] (midi-control rcvr 0 0))
+
+(defn- led-details [id]
+  (if (vector? id)
+    {:note (apply cordinate-to-note id) :fn midi-note-on}
+    (-> launchpad-config :interfaces :leds :controls id)))
 
 (defn- led-off
   [rcvr id]
-  (when-let [led-id (-> launchpad-config :interfaces :leds :controls id :note)]
-    (let [midi-fn (-> launchpad-config :interfaces :leds :controls id :fn)]
-      (midi-fn rcvr led-id off))))
+  (when-let [{led-id :note midi-fn :fn} (led-details id)]
+    (midi-fn rcvr led-id off)))
 
 (defn- led-on
-  [rcvr id]
-  (when-let [led-id (-> launchpad-config :interfaces :leds :controls id :note)]
-    (let [midi-fn (-> launchpad-config :interfaces :leds :controls id :fn)]
-      (midi-fn rcvr led-id full-brightness))))
+  ([rcvr id] (led-on rcvr id full-brightness))
+  ([rcvr id brightness]
+     (when-let [{led-id :note midi-fn :fn} (led-details id)]
+       (midi-fn rcvr led-id brightness))))
 
 (defn intromation [rcvr]
   (doseq [row (range 0 8)]
-    (doseq [col (range 0 8)]
-      (midi-note-on rcvr (cordinate-to-note col row) full-brightness))
-    (Thread/sleep 100))
+    (doseq [intensity (range 1 4)]
+      (doseq [col (range 0 8)] (led-on rcvr [col row] intensity))
+      (Thread/sleep 50))
+    (doseq [col (range 0 8)] (led-on rcvr [col row] 3))
+    (Thread/sleep 50))
   (midi-control rcvr all-lights 127)
   (Thread/sleep 400)
   (doseq [row (reverse (range 0 8))]
     (doseq [col (reverse (range 0 8))]
-      (midi-note-on rcvr (cordinate-to-note col row) off))
+      (led-off rcvr [col row]))
     (Thread/sleep 100))
-  (Thread/sleep 100)
   (reset-launchpad rcvr))
 
 (comment
   (intromation (first launchpad-connected-receivers))
   (led-on  (first launchpad-connected-receivers) :snda)
   (led-off (first launchpad-connected-receivers) :snda)
-  (reset-launchpad* (first launchpad-connected-receivers)))
+  (reset-launchpad (first launchpad-connected-receivers)))
