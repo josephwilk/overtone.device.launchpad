@@ -9,4 +9,6 @@
   (defonce launchpad-kons                (device/merge-launchpad-kons launchpad-connected-receivers launchpad-stateful-devices)))
 
 (comment
-  (boot!))
+  (boot!)
+  (use 'overtone.live)
+  (event-debug-on))
