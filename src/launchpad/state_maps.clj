@@ -10,16 +10,20 @@
 
 (defn up-mode [launchpad]
   (reset-direction-modes launchpad)
-  (device/led-on* launchpad :up))
+  (device/led-on* launchpad :up)
+  (device/render-grid launchpad (:up @(:state launchpad))))
 
 (defn down-mode [launchpad]
   (reset-direction-modes launchpad)
-  (device/led-on* launchpad :down))
+  (device/led-on* launchpad :down)
+  (device/render-grid launchpad (:down @(:state launchpad))))
 
 (defn left-mode [launchpad]
   (reset-direction-modes launchpad)
-  (device/led-on* launchpad :left))
+  (device/led-on* launchpad :left)
+  (device/render-grid launchpad (:left @(:state launchpad))))
 
 (defn right-mode [launchpad]
   (reset-direction-modes launchpad)
-  (device/led-on* launchpad :right))
+  (device/led-on* launchpad :right)
+  (device/render-grid launchpad (:right @(:state launchpad))))

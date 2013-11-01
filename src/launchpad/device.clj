@@ -1,7 +1,9 @@
 (ns launchpad.device
   (:require
    [overtone.studio.midi :refer :all]
-   [overtone.libs.event :refer :all]))
+   [overtone.libs.event :refer :all]
+
+   [launchpad.grid :as grid]))
 
 (defrecord Launchpad [rcv dev interfaces])
 
@@ -36,21 +38,16 @@
 
 (def launchpad-config
   {:name "Launchpad S"
-   :interfaces {:grid-controls {:controls
-                                {:up      {:note 104 :type :control-change}
-                                 :down    {:note 105 :type :control-change}
-                                 :left    {:note 106 :type :control-change}
-                                 :right   {:note 107 :type :control-change}
-                                 :session {:note 108 :type :control-change}
-                                 :user1   {:note 109 :type :control-change}
-                                 :user2   {:note 110 :type :control-change}
-                                 :mixer   {:note 111 :type :control-change}
-                                 }}
+   :interfaces {:grid-controls
+                {:controls
+                 {:up      {:note 104 :type :control-change}
+                  :down    {:note 105 :type :control-change}
+                  :left    {:note 106 :type :control-change}
+                  :right   {:note 107 :type :control-change}}}
 
                 :leds {:name "LEDs"
                        :type :midi-out
                        :midi-handle "Launchpad S"
-                       :control-defaults {:type :led}
                        :controls {:up      {:note 104 :fn midi-control}
                                   :down    {:note 105 :fn midi-control}
                                   :left    {:note 106 :fn midi-control}
@@ -114,6 +111,13 @@
   (let [rcvr (-> launchpad :rcv)]
     (led-on rcvr id)))
 
+(defn render-grid [launchpad grid]
+  (doseq [row grid x (range 0 9)]
+    (doseq [col row y (range 0 9)]
+      (if (= 1 col)
+        (led-on launchpad [x y])
+        (led-off launchpad [x y])))))
+
 (defn intromation [rcvr]
   (doseq [row (range 0 8)]
     (doseq [intensity (range 1 4)]
@@ -131,7 +135,8 @@
 (defn stateful-launchpad
   [device]
   (let [interfaces (-> launchpad-config :interfaces)
-        state      (atom {:up [[] [] [] [] [] [] []]})] ;TODO: State its a thing
+        state      (atom {:up   (grid/new)
+                          :down (grid/new)})]
     {:dev        device
      :interfaces interfaces
      :state      state
