@@ -9,7 +9,7 @@ A Clojure library for using the LaunchPad with Overtone.
 ## Usage
 
 ```clojure
-(use '[launchpad.core])
+(use 'launchpad.core)
 
 (boot!)
 ```
