@@ -10,24 +10,28 @@
   (defonce launchpad-stateful-devices    (map device/stateful-launchpad launchpad-connected-devices))
   (defonce launchpad-kons                (device/merge-launchpad-kons launchpad-connected-receivers launchpad-stateful-devices))
 
-  (e/on-event [:Launchpad :control 0 :up]
-              (fn [m] (s/up-mode (:launchpad m)))
-              ::up-mode)
+  (let [launchpad-id 0]
 
-  (e/on-event [:Launchpad :control 0 :down]
-              (fn [m] (s/down-mode (:launchpad m)))
-              ::down-mode)
+    (e/on-event [:Launchpad :control launchpad-id :up]
+                (fn [m] (s/up-mode (:launchpad m)))
+                ::up-mode)
 
-  (e/on-event [:Launchpad :control 0 :left]
-              (fn [m] (s/left-mode (:launchpad m)))
-              ::left-mode)
+    (e/on-event [:Launchpad :control launchpad-id :down]
+                (fn [m] (s/down-mode (:launchpad m)))
+                ::down-mode)
 
-  (e/on-event [:Launchpad :control 0 :right]
-              (fn [m] (s/right-mode (:launchpad m)))
-              ::right-mode))
+    (e/on-event [:Launchpad :control launchpad-id :left]
+                (fn [m] (s/left-mode (:launchpad m)))
+                ::left-mode)
 
-(comment
-  (boot!)
-  (use 'overtone.live)
-  (event-debug-on)
-  (device/reset-launchpad (first launchpad-connected-receivers)))
+    (e/on-event [:Launchpad :control launchpad-id :right]
+                (fn [m] (s/right-mode (:launchpad m)))
+                ::right-mode))
+
+  (comment
+    (boot!)
+    (use 'overtone.live)
+    (event-debug-on)
+    (device/reset-launchpad (first launchpad-connected-receivers))
+    (device/intromation (first launchpad-connected-receivers))
+    ))
