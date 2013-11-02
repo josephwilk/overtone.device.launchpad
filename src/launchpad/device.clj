@@ -34,7 +34,7 @@
    (range 96 104)
    (range 112 120)])
 
-(defn coordinate-to-note [x y] (nth (nth grid-notes x) y))
+(defn- coordinate->note [x y] (grid/cell grid-notes x y))
 
 (def launchpad-config
   {:name "Launchpad S"
@@ -86,7 +86,7 @@
 
 (defn- led-details [id]
   (if (vector? id)
-    {:note (apply coordinate-to-note id) :fn (-> launchpad-config :interfaces :leds :grid :fn)}
+    {:note (apply coordinate->note id) :fn (-> launchpad-config :interfaces :leds :grid :fn)}
     (-> launchpad-config :interfaces :leds :controls id)))
 
 (defn- led-off
