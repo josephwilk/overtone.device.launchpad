@@ -1,6 +1,6 @@
 (ns launchpad.t-core
   (:use midje.sweet
-        launchpad.core))
+        launchpad.device))
 
 (fact "velocity maps color and intensity to a decimal signal"
   (velocity {:color :red    :intensity 3}) => 15

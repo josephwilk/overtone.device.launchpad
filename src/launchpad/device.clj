@@ -67,9 +67,7 @@
                                   :arm     {:note 120 :fn midi-note-on}}
                        :grid {:fn midi-note-on}}}})
 
-(defn reset-launchpad [rcvr] (midi-control rcvr 0 0))
-
-(defn velocity [{color :color intensity :intensity}]
+(defn- velocity [{color :color intensity :intensity}]
   (if (some #{color} led-colors)
     (let [intensity (if (> intensity 3) 3 intensity)
           green (case color
@@ -118,6 +116,8 @@
         (led-on* launchpad [x y])
         (led-off* launchpad [x y])))))
 
+(defn reset-launchpad [rcvr] (midi-control rcvr 0 0))
+
 (defn intromation [rcvr]
   (doseq [row (range 0 8)]
     (doseq [intensity (range 1 4)]
@@ -154,6 +154,7 @@
         device-num (midi-device-num      (:dev device))
         state      (:state device)]
 
+    ;Grid events
     (doseq [[x row] (map vector (iterate inc 0) grid-notes)
             [y note] (map vector (iterate inc 0) row)]
       (let [type      :note-on
@@ -162,17 +163,15 @@
             update-fn (fn [{:keys [data2-f]}]
                         (let [active (:active @state)
                               grid (active @state)
-                              old-row (-> grid (nth x) (vec))
-                              old-cell (nth old-row y)
-                              new-row (assoc old-row y (if (= 1 old-cell) 0 1))
-                              new-grid (assoc (vec grid) x new-row)]
-                          (if (= 0 old-cell)
+                              new-grid (grid/toggle grid x y)]
+                          (if (= 1 (nth (nth new-grid x) y))
                             (led-on* launchpad [x y])
                             (led-off* launchpad [x y]))
                           (swap! state assoc active new-grid)))]
         (println :handle handle)
         (on-event handle update-fn (str "update-state-for" handle))))
 
+    ;Control events
     (doseq [[k v] (-> launchpad-config :interfaces :grid-controls :controls)]
       (let [type      (:type v)
             note      (:note v)
