@@ -1,6 +1,6 @@
 (ns launchpad.grid)
 
-(defn new []
+(defn empty []
   [[0 0 0 0 0 0 0 0]
    [0 0 0 0 0 0 0 0]
    [0 0 0 0 0 0 0 0]
@@ -16,3 +16,7 @@
         new-row (assoc old-row y (if (= 1 old-cell) 0 1))
         new-grid (assoc (vec grid) x new-row)]
     new-grid))
+
+(defn cell [grid x y] (-> grid (nth x)) (nth y))
+
+(defn on? [grid x y] (not= 0 (cell grid x y)))

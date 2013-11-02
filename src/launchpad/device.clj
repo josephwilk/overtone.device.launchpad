@@ -136,10 +136,10 @@
   [device]
   (let [interfaces (-> launchpad-config :interfaces)
         state      (atom {:active :up
-                          :up    (grid/new)
-                          :down  (grid/new)
-                          :left  (grid/new)
-                          :right (grid/new)})
+                          :up    (grid/empty)
+                          :down  (grid/empty)
+                          :left  (grid/empty)
+                          :right (grid/empty)})
         device-key    (midi-full-device-key device)]
     {:dev        device
      :interfaces interfaces
@@ -164,7 +164,7 @@
                         (let [active (:active @state)
                               grid (active @state)
                               new-grid (grid/toggle grid x y)]
-                          (if (= 1 (nth (nth new-grid x) y))
+                          (if (grid/on? new-grid x y)
                             (led-on* launchpad [x y])
                             (led-off* launchpad [x y]))
                           (swap! state assoc active new-grid)))]
