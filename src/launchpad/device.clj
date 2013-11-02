@@ -67,7 +67,7 @@
                                   :arm     {:note 120 :fn midi-note-on}}
                        :grid {:fn midi-note-on}}}})
 
-(defn- velocity [{color :color intensity :intensity}]
+(defn velocity [{color :color intensity :intensity}]
   (if (some #{color} led-colors)
     (let [intensity (if (> intensity 3) 3 intensity)
           green (case color

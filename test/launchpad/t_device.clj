@@ -1,4 +1,4 @@
-(ns launchpad.t-core
+(ns launchpad.t-device
   (:use midje.sweet
         launchpad.device))
 
