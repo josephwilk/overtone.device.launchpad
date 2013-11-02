@@ -1,8 +1,9 @@
 (ns launchpad.core
-  (:require [overtone.studio.midi :as midi]
-            [overtone.libs.event :as e]
-            [launchpad.state-maps :as s]
-            [launchpad.device :as device]))
+  (:require
+   [overtone.studio.midi :as midi]
+   [overtone.libs.event  :as e]
+   [launchpad.mode       :as mode]
+   [launchpad.device     :as device]))
 
 (defn boot! []
   (defonce launchpad-connected-receivers (midi/midi-find-connected-receivers "Launchpad"))
@@ -13,19 +14,19 @@
   (let [launchpad-id 0]
 
     (e/on-event [:Launchpad :control launchpad-id :up]
-                (fn [m] (s/up-mode (:launchpad m)))
+                (fn [m] (mode/up-mode (:launchpad m)))
                 ::up-mode)
 
     (e/on-event [:Launchpad :control launchpad-id :down]
-                (fn [m] (s/down-mode (:launchpad m)))
+                (fn [m] (mode/down-mode (:launchpad m)))
                 ::down-mode)
 
     (e/on-event [:Launchpad :control launchpad-id :left]
-                (fn [m] (s/left-mode (:launchpad m)))
+                (fn [m] (mode/left-mode (:launchpad m)))
                 ::left-mode)
 
     (e/on-event [:Launchpad :control launchpad-id :right]
-                (fn [m] (s/right-mode (:launchpad m)))
+                (fn [m] (mode/right-mode (:launchpad m)))
                 ::right-mode))
 
   (comment
@@ -33,5 +34,4 @@
     (use 'overtone.live)
     (event-debug-on)
     (device/reset-launchpad (first launchpad-connected-receivers))
-    (device/intromation (first launchpad-connected-receivers))
-    ))
+    (device/intromation (first launchpad-connected-receivers))))

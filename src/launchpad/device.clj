@@ -3,6 +3,7 @@
    [overtone.studio.midi :refer :all]
    [overtone.libs.event :refer :all]
 
+   [launchpad.state-maps :as state-maps]
    [launchpad.grid :as grid]))
 
 (defrecord Launchpad [rcv dev interfaces])
@@ -119,28 +120,29 @@
 (defn reset-launchpad [rcvr] (midi-control rcvr 0 0))
 
 (defn intromation [rcvr]
-  (doseq [row (range 0 8)]
-    (doseq [intensity (range 1 4)]
-      (doseq [col (range 0 8)] (led-on rcvr [col row] intensity :red))
-      (Thread/sleep 50))
-    (Thread/sleep (/ 50 (+ 1 row))))
+  (doall
+   (pmap (fn [col]
+           (let [refresh (+ 50 (rand-int 50))
+                 start-lag (rand-int 1000)]
+             (Thread/sleep start-lag)
+             (doseq [intensity (range 1 4)]
+               (doseq [row (range 0 8)]
+                 (led-on rcvr [row col] intensity :red)
+                 (Thread/sleep (- refresh row))))))
+         (range 0 8)))
   (midi-control rcvr all-lights 127)
   (Thread/sleep 400)
   (doseq [row (reverse (range 0 8))]
     (doseq [col (reverse (range 0 8))]
-      (led-off rcvr [col row]))
+      (led-off rcvr [row col]))
     (Thread/sleep 50))
   (reset-launchpad rcvr))
 
 (defn stateful-launchpad
   [device]
   (let [interfaces (-> launchpad-config :interfaces)
-        state      (atom {:active :up
-                          :up    (grid/empty)
-                          :down  (grid/empty)
-                          :left  (grid/empty)
-                          :right (grid/empty)})
-        device-key    (midi-full-device-key device)]
+        state      (atom (state-maps/empty))
+        device-key (midi-full-device-key device)]
     {:dev        device
      :interfaces interfaces
      :state      state
@@ -161,13 +163,10 @@
             note      note
             handle    (concat device-key [type note])
             update-fn (fn [{:keys [data2-f]}]
-                        (let [active (:active @state)
-                              grid (active @state)
-                              new-grid (grid/toggle grid x y)]
-                          (if (grid/on? new-grid x y)
+                        (let [new-state (state-maps/toggle! state x y)]
+                          (if (state-maps/on? new-state x y)
                             (led-on* launchpad [x y])
-                            (led-off* launchpad [x y]))
-                          (swap! state assoc active new-grid)))]
+                            (led-off* launchpad [x y]))))]
         (println :handle handle)
         (on-event handle update-fn (str "update-state-for" handle))))
 

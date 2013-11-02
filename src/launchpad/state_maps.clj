@@ -1,29 +1,20 @@
 (ns launchpad.state-maps
-  (:require [launchpad.device :as device]))
+  (:require [launchpad.grid :as grid]))
 
-(defn turn-off-old-active-mode [launchpad]
-  (device/led-off* launchpad (:active @(:state launchpad))))
+(defn mode [state] (:active @state))
 
-(defn up-mode [launchpad]
-  (turn-off-old-active-mode launchpad)
-  (device/led-on* launchpad :up)
-  (swap! (:state launchpad) assoc :active :up)
-  (device/render-grid launchpad (:up @(:state launchpad))))
+(defn active-grid [state] ((mode state) @state))
 
-(defn down-mode [launchpad]
-  (turn-off-old-active-mode launchpad)
-  (device/led-on* launchpad :down)
-  (swap! (:state launchpad) assoc :active :down)
-  (device/render-grid launchpad (:down @(:state launchpad))))
+(defn toggle! [state x y]
+  (let [new-grid (grid/toggle (active-grid state) x y)]
+    (swap! state assoc (mode state) new-grid)
+    state))
 
-(defn left-mode [launchpad]
-  (turn-off-old-active-mode launchpad)
-  (device/led-on* launchpad :left)
-  (swap! (:state launchpad) assoc :active :left)
-  (device/render-grid launchpad (:left @(:state launchpad))))
+(defn on? [state x y] (grid/on? (active-grid state) x y))
 
-(defn right-mode [launchpad]
-  (turn-off-old-active-mode launchpad)
-  (device/led-on* launchpad :right)
-  (swap! (:state launchpad) assoc :active :right)
-  (device/render-grid launchpad (:right @(:state launchpad))))
+(defn empty []
+  {:active :up
+   :up    (grid/empty)
+   :down  (grid/empty)
+   :left  (grid/empty)
+   :right (grid/empty)})
