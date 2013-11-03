@@ -17,6 +17,13 @@ Grid buttons simply toggle on/off.
 (boot!)
 ```
 
+## Todos
+
+Sooo many things to do. Contribute, ideas and code.
+
+https://github.com/josephwilk/overtone.device.launchpad/issues?labels=enhancement&page=1&state=open
+
+
 ## License
 
 Copyright © 2013 Joseph Wilk
