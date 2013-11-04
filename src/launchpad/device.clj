@@ -90,32 +90,32 @@
     {:note (apply coordinate->note id) :fn (-> launchpad-config :interfaces :leds :grid :fn)}
     (-> launchpad-config :interfaces :leds :controls id)))
 
-(defn- led-off
+(defn- led-off*
   [rcvr id]
   (when-let [{led-id :note midi-fn :fn} (led-details id)]
     (midi-fn rcvr led-id off)))
 
-(defn led-off*
+(defn led-off
   [launchpad id]
   (let [rcvr (-> launchpad :rcv)]
-    (led-off rcvr id)))
+    (led-off* rcvr id)))
 
-(defn- led-on
+(defn- led-on*
   ([rcvr id] (led-on rcvr id full-brightness :red))
   ([rcvr id brightness color]
      (when-let [{led-id :note midi-fn :fn} (led-details id)]
        (midi-fn rcvr led-id (velocity {:color color
                                        :intensity brightness})))))
-(defn led-on* [launchpad id]
+(defn led-on [launchpad id]
   (let [rcvr (-> launchpad :rcv)]
-    (led-on rcvr id)))
+    (led-on* rcvr id)))
 
 (defn render-grid [launchpad grid]
   (doseq [[x row] (map vector (iterate inc 0) grid)]
     (doseq [[y col] (map vector (iterate inc 0) row)]
       (if (= 1 col)
-        (led-on* launchpad [x y])
-        (led-off* launchpad [x y])))))
+        (led-on launchpad [x y])
+        (led-off launchpad [x y])))))
 
 (defn reset-launchpad [rcvr] (midi-control rcvr 0 0))
 
@@ -127,14 +127,14 @@
              (Thread/sleep start-lag)
              (doseq [intensity (range 1 4)]
                (doseq [row (range 0 8)]
-                 (led-on rcvr [row col] intensity :red)
+                 (led-on* rcvr [row col] intensity :red)
                  (Thread/sleep (- refresh row))))))
          (range 0 8)))
   (midi-control rcvr all-lights 127)
   (Thread/sleep 400)
   (doseq [row (reverse (range 0 8))]
     (doseq [col (reverse (range 0 8))]
-      (led-off rcvr [row col]))
+      (led-off* rcvr [row col]))
     (Thread/sleep 50))
   (reset-launchpad rcvr))
 
@@ -165,8 +165,8 @@
             update-fn (fn [{:keys [data2-f]}]
                         (let [new-state (state-maps/toggle! state x y)]
                           (if (state-maps/on? new-state x y)
-                            (led-on* launchpad [x y])
-                            (led-off* launchpad [x y]))))]
+                            (led-on launchpad [x y])
+                            (led-off launchpad [x y]))))]
         (println :handle handle)
         (on-event handle update-fn (str "update-state-for" handle))))
 
