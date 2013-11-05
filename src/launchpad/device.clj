@@ -101,7 +101,7 @@
     (led-off* rcvr id)))
 
 (defn- led-on*
-  ([rcvr id] (led-on rcvr id full-brightness :red))
+  ([rcvr id] (led-on* rcvr id full-brightness :red))
   ([rcvr id brightness color]
      (when-let [{led-id :note midi-fn :fn} (led-details id)]
        (midi-fn rcvr led-id (velocity {:color color
