@@ -66,17 +66,15 @@ Experimenting with ways of interacting a Launchpad with Overtone and Clojure.
   (defn fire-sequence [lp fun row]
     (looper m fun (map #(if (= % 1) true false) (state-maps/row (:state lp) row))))
 
-  (bind :up :vol  (fn [lp] (fire-sequence launchpad kick 0)))
-  (bind :up :pan  (fn [lp] (fire-sequence launchpad snare 1)))
-  (bind :up :snda (fn [lp] (fire-sequence launchpad clap 2)))
-  (bind :up :arm  (fn [lp] (stop))))
-  
+  (bind :down :vol  (fn [lp] (fire-sequence lp kick 0)))
+  (bind :down :pan  (fn [lp] (fire-sequence lp snare 1)))
+  (bind :down :snda (fn [lp] (fire-sequence lp clap 2)))
+  (bind :down :arm  (fn [lp] (stop))))
+
 ;;Use LED row sequences to indicate when beats strike (uses samples + supercollider counter)
-;;Use LED row sequences to indicate when beats should strike
 (do
   (require '[launchpad.grid :as grid])
   (require '[launchpad.state-maps :as state-maps])
-  (use 'overtone.inst.drum)
   (use 'overtone.synth.timing)
 
   (defonce buf-0 (buffer 8))
@@ -151,6 +149,7 @@ Experimenting with ways of interacting a Launchpad with Overtone and Clojure.
                            (buffer-write! buf-1 [0 0 0 0 0 0 0 0])
                            (buffer-write! buf-2 [0 0 0 0 0 0 0 0])
                            (buffer-write! buf-3 [0 0 0 0 0 0 0 0]))))
+
 ```
 
 ## Todos
