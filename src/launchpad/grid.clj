@@ -22,3 +22,6 @@
 (defn cell [grid x y] (-> grid (nth x) (nth y)))
 
 (defn on? [grid x y] (not= 0 (cell grid x y)))
+
+(defn row [grid n]
+  (nth grid n))
