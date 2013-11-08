@@ -99,9 +99,9 @@ Experimenting with ways of interacting a Launchpad with Overtone and Clojure.
   (defsynth beat-trg [div BEAT-FRACTION] (out:kr beat-trg-bus (pulse-divider (in:kr root-trg-bus) div)))
   (defsynth beat-cnt [] (out:kr beat-cnt-bus (pulse-count (in:kr beat-trg-bus))))
 
-  (def kick-s (sample (freesound-path 777)))
+  (def kick-s  (sample (freesound-path 777)))
   (def click-s (sample (freesound-path 406)))
-  (def boom-s (sample (freesound-path 33637)))
+  (def boom-s  (sample (freesound-path 33637)))
   (def subby-s (sample (freesound-path 25649)))
 
   (defsynth mono-sequencer
@@ -122,33 +122,36 @@ Experimenting with ways of interacting a Launchpad with Overtone and Clojure.
                     (demand bar-trg 0 (dbrown 200 20000 50 INF))
                     (lin-lin:kr (lf-tri:kr 0.01) -1 1 0.1 0.9)))))))
 
-  (do
-    (def r-cnt (root-cnt))
-    (def b-cnt (beat-cnt))
-    (def b-trg (beat-trg))
-    (def r-trg (root-trg))
+  (def r-cnt (root-cnt))
+  (def b-cnt (beat-cnt))
+  (def b-trg (beat-trg))
+  (def r-trg (root-trg))
 
-    (def kicks (doall
-                (for [x (range 8)] (mono-sequencer :buf kick-s :beat-num x :sequencer buf-0))))
+  (def kicks (doall
+              (for [x (range 8)]
+                (mono-sequencer :buf kick-s :beat-num x :sequencer buf-0))))
 
-    (def clicks (doall
-                 (for [x (range 8)] (mono-sequencer :buf click-s :beat-num x :sequencer buf-1))))
+  (def clicks (doall
+               (for [x (range 8)]
+                 (mono-sequencer :buf click-s :beat-num x :sequencer buf-1))))
 
-    (def booms (doall
-                (for [x (range 8)] (mono-sequencer :buf boom-s :beat-num x :sequencer buf-2))))
+  (def booms (doall
+              (for [x (range 8)]
+                (mono-sequencer :buf boom-s :beat-num x :sequencer buf-2))))
 
-    (def subbies (doall
-                  (for [x (range 8)] (mono-sequencer :buf subby-s :beat-num x :sequencer buf-3)))))
+  (def subbies (doall
+                (for [x (range 8)]
+                  (mono-sequencer :buf subby-s :beat-num x :sequencer buf-3))))
 
-  (defn fire-sequence [lp buf row] (buffer-write! buf (state-maps/row (:state lp) row)))
+  (defn fire-buffer-sequence [lp buf row] (buffer-write! buf (state-maps/row (:state lp) row)))
 
-  (bind :up :vol  (fn [lp] (fire-sequence lp buf-0 0)))
-  (bind :up :pan  (fn [lp] (fire-sequence lp buf-1 1)))
-  (bind :up :snda (fn [lp] (fire-sequence lp buf-2 2)))
+  (bind :up :vol  (fn [lp] (fire-buffer-sequence lp buf-0 0)))
+  (bind :up :pan  (fn [lp] (fire-buffer-sequence lp buf-1 1)))
+  (bind :up :snda (fn [lp] (fire-buffer-sequence lp buf-2 2)))
   (bind :up :arm  (fn [lp] (buffer-write! buf-0 [0 0 0 0 0 0 0 0])
-                           (buffer-write! buf-1 [0 0 0 0 0 0 0 0])
-                           (buffer-write! buf-2 [0 0 0 0 0 0 0 0])
-                           (buffer-write! buf-3 [0 0 0 0 0 0 0 0]))))
+                          (buffer-write! buf-1 [0 0 0 0 0 0 0 0])
+                          (buffer-write! buf-2 [0 0 0 0 0 0 0 0])
+                          (buffer-write! buf-3 [0 0 0 0 0 0 0 0]))))
 
 ```
 
