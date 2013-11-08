@@ -1,4 +1,6 @@
 (ns launchpad.device
+  (:use
+   [launchpad.util])
   (:require
    [overtone.studio.midi :refer :all]
    [overtone.libs.event :refer :all]
@@ -168,10 +170,12 @@
             update-fn (fn [{:keys [data2-f]}]
                         (let [active-mode (state-maps/mode state)]
                           (let [trigger-fn (get-in @grid/fn-grid [active-mode (keyword (str x "x" y))])]
-                            (if (some #{(state-maps/mode state)} [:user1 :user2])
-                              (when trigger-fn
+                            (when trigger-fn
+                              (if (= 0 (arg-count trigger-fn))
                                 (trigger-fn)
-                                (led-on launchpad [x y]))
+                                (trigger-fn launchpad)))
+                            (if (some #{(state-maps/mode state)} [:user1 :user2])
+                              (led-on launchpad [x y])
                               (let [new-state (state-maps/toggle! state x y)]
                                 (if (state-maps/on? new-state x y)
                                   (led-on launchpad [x y])
