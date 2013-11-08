@@ -63,16 +63,13 @@ Experimenting with ways of interacting a Launchpad with Overtone and Clojure.
           (at (nome beat) (do (when (nth state p) (sound))))
           (apply-at (nome (inc beat)) looper [nome sound state (inc p)]))))
 
-  (defn fire-sequence [launchpad fun row]
-    (looper m fun (map #(if (= % 1) true false) (state-maps/row (:state launchpad) row))))
+  (defn fire-sequence [lp fun row]
+    (looper m fun (map #(if (= % 1) true false) (state-maps/row (:state lp) row))))
 
-  (bind :up :vol (fn [launchpad] (fire-sequence launchpad kick 0)))
-
-  (bind :up :pan (fn [launchpad] (fire-sequence launchpad snare 1)))
-
-  (bind :up :snda (fn [launchpad] (fire-sequence launchpad clap 2)))
-
-  (bind :up :arm (fn [launchpad] (stop))))
+  (bind :up :vol  (fn [lp] (fire-sequence launchpad kick 0)))
+  (bind :up :pan  (fn [lp] (fire-sequence launchpad snare 1)))
+  (bind :up :snda (fn [lp] (fire-sequence launchpad clap 2)))
+  (bind :up :arm  (fn [lp] (stop))))
 ```
 
 ## Todos
