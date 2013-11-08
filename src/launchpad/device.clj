@@ -1,6 +1,6 @@
 (ns launchpad.device
   (:use
-   [launchpad.util])
+   launchpad.util)
   (:require
    [overtone.studio.midi :refer :all]
    [overtone.libs.event :refer :all]
@@ -48,7 +48,17 @@
                   :left    {:note 106 :type :control-change}
                   :right   {:note 107 :type :control-change}
                   :user1   {:note 109 :type :control-change}
-                  :user2   {:note 110 :type :control-change}}}
+                  :user2   {:note 110 :type :control-change}}
+
+                 :side-controls
+                 {:vol     {:note 8   :type :note-on}
+                  :pan     {:note 24  :type :note-on}
+                  :snda    {:note 40  :type :note-on}
+                  :sndb    {:note 56  :type :note-on}
+                  :stop    {:note 72  :type :note-on}
+                  :trkon   {:note 88  :type :note-on}
+                  :solo    {:note 104 :type :note-on}
+                  :arm     {:note 120 :type :note-on}}}
 
                 :leds {:name "LEDs"
                        :type :midi-out
@@ -153,6 +163,32 @@
      :state      state
      :type       ::stateful-launchpad}))
 
+(defn- grid-event-handler [launchpad x y]
+  (let [state (:state launchpad)]
+    (fn [{:keys [data2-f]}]
+      (let [active-mode (state-maps/mode state)]
+        (let [trigger-fn (get-in @grid/fn-grid [active-mode (keyword (str x "x" y))])]
+          (when trigger-fn
+            (if (= 0 (arg-count trigger-fn))
+              (trigger-fn)
+              (trigger-fn launchpad)))
+          (if (some #{(state-maps/mode state)} [:user1 :user2])
+            (led-on launchpad [x y])
+            (let [new-state (state-maps/toggle! state x y)]
+              (if (state-maps/on? new-state x y)
+                (led-on launchpad [x y])
+                (led-off launchpad [x y])))))))))
+
+(defn- side-event-handler [launchpad name]
+  (let [state (:state launchpad)]
+    (fn [{:keys [data2-f]}]
+      (let [active-mode (state-maps/mode state)]
+        (let [trigger-fn (get-in @grid/fn-grid [active-mode (keyword name)])]
+          (when trigger-fn
+            (if (= 0 (arg-count trigger-fn))
+              (trigger-fn)
+              (trigger-fn launchpad))))))))
+
 (defn- register-event-handlers-for-launchpad
   [device rcv idx]
   (let [launchpad  (map->Launchpad (assoc device :rcv rcv))
@@ -161,25 +197,13 @@
         device-num (midi-device-num      (:dev device))
         state      (:state device)]
 
-    ;Grid events
+    ;;Grid events
     (doseq [[x row] (map vector (iterate inc 0) grid-notes)
             [y note] (map vector (iterate inc 0) row)]
       (let [type      :note-on
             note      note
             handle    (concat device-key [type note])
-            update-fn (fn [{:keys [data2-f]}]
-                        (let [active-mode (state-maps/mode state)]
-                          (let [trigger-fn (get-in @grid/fn-grid [active-mode (keyword (str x "x" y))])]
-                            (when trigger-fn
-                              (if (= 0 (arg-count trigger-fn))
-                                (trigger-fn)
-                                (trigger-fn launchpad)))
-                            (if (some #{(state-maps/mode state)} [:user1 :user2])
-                              (led-on launchpad [x y])
-                              (let [new-state (state-maps/toggle! state x y)]
-                                (if (state-maps/on? new-state x y)
-                                  (led-on launchpad [x y])
-                                  (led-off launchpad [x y])))))))]
+            update-fn (grid-event-handler launchpad x y)]
         (println :handle handle)
         (on-event handle update-fn (str "update-state-for" handle))
 
@@ -188,7 +212,16 @@
                            (led-off launchpad [x y])))
                   (str "update-led-for" [:note-off note]))))
 
-    ;Control events
+    ;;Side events
+    (doseq [[k v] (-> launchpad-config :interfaces :grid-controls :side-controls)]
+      (let [type      (:type v)
+            note      (:note v)
+            handle    (concat device-key [type note])
+            update-fn (side-event-handler launchpad k)]
+        (println :handle handle)
+        (on-event handle update-fn (str "update-state-for" handle))))
+
+    ;;Control events
     (doseq [[k v] (-> launchpad-config :interfaces :grid-controls :controls)]
       (let [type      (:type v)
             note      (:note v)

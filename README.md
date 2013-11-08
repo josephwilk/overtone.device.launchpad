@@ -16,7 +16,7 @@ Experimenting with ways of interacting a Launchpad with Overtone and Clojure.
   * Grid buttons trigger led/fn key-down and off with key-up
 
 ```clojure
-(use 'launchpad.core)
+(use '[launchpad.core] :reload)
 (use 'overtone.live)
 
 (boot!)
@@ -47,10 +47,11 @@ Experimenting with ways of interacting a Launchpad with Overtone and Clojure.
   (bind :user1 :3x2 #(haziti-clap))
   (bind :user1 :4x2 #(bing)))
 
+;;Use LED row sequences to indicate when beats should strike
 (do
-  ;Use LED row sequences to indicate when beats should strike
   (require '[launchpad.grid :as grid])
   (require '[launchpad.state-maps :as state-maps])
+  (use 'overtone.inst.drum)
 
   (def m (metronome 240))
 
@@ -62,11 +63,11 @@ Experimenting with ways of interacting a Launchpad with Overtone and Clojure.
           (at (nome beat) (do (when (nth state p) (sound))))
           (apply-at (nome (inc beat)) looper [nome sound state (inc p)]))))
 
-  (bind :up :7x7 (fn [launchpad]
-                   (looper m kick2 (map #(if (= % 1) true false)
+  (bind :up :vol (fn [launchpad]
+                   (looper m dance-kick (map #(if (= % 1) true false)
                                         (grid/row (state-maps/active-grid (:state launchpad)) 0)))))
 
-  (bind :up :6x7 (fn [launchpad] (stop))))
+  (bind :up :arm (fn [launchpad] (stop))))
 
 ```
 
