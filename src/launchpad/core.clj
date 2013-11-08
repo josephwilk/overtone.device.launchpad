@@ -10,7 +10,7 @@
    [launchpad.grid       :as g]))
 
 (defn bind
-  "For a specific active mode bind a grid cell press to a function"
+  "For a specific mode bind a grid cell key press to a function"
   [mode cell fun]
   (swap! g/fn-grid assoc-in [mode cell] fun))
 
@@ -23,20 +23,28 @@
   (let [launchpad-id 0]
 
     (e/on-event [:Launchpad :control launchpad-id :up]
-                (fn [m] (mode/up-mode (:launchpad m)))
+                (fn [m] (mode/trigger (:launchpad m) :up))
                 ::up-mode)
 
     (e/on-event [:Launchpad :control launchpad-id :down]
-                (fn [m] (mode/down-mode (:launchpad m)))
+                (fn [m] (mode/trigger (:launchpad m) :down))
                 ::down-mode)
 
     (e/on-event [:Launchpad :control launchpad-id :left]
-                (fn [m] (mode/left-mode (:launchpad m)))
+                (fn [m] (mode/trigger (:launchpad m) :left))
                 ::left-mode)
 
     (e/on-event [:Launchpad :control launchpad-id :right]
-                (fn [m] (mode/right-mode (:launchpad m)))
-                ::right-mode))
+                (fn [m] (mode/trigger (:launchpad m) :right))
+                ::right-mode)
+
+    (e/on-event [:Launchpad :control launchpad-id :user1]
+                (fn [m] (mode/trigger (:launchpad m) :user1))
+                ::user1-mode)
+
+    (e/on-event [:Launchpad :control launchpad-id :user2]
+                (fn [m] (mode/trigger (:launchpad m) :user2))
+                ::user2-mode))
 
   (comment
     (boot!)

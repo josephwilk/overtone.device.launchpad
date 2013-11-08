@@ -17,4 +17,6 @@
    :up    (grid/empty)
    :down  (grid/empty)
    :left  (grid/empty)
-   :right (grid/empty)})
+   :right (grid/empty)
+   :user1 (grid/empty)
+   :user2 (grid/empty)})

@@ -44,7 +44,9 @@
                  {:up      {:note 104 :type :control-change}
                   :down    {:note 105 :type :control-change}
                   :left    {:note 106 :type :control-change}
-                  :right   {:note 107 :type :control-change}}}
+                  :right   {:note 107 :type :control-change}
+                  :user1   {:note 109 :type :control-change}
+                  :user2   {:note 110 :type :control-change}}}
 
                 :leds {:name "LEDs"
                        :type :midi-out
@@ -120,6 +122,7 @@
 (defn reset-launchpad [rcvr] (midi-control rcvr 0 0))
 
 (defn intromation [rcvr]
+  (reset-launchpad rcvr)
   (doall
    (pmap (fn [col]
            (let [refresh (+ 50 (rand-int 50))
@@ -163,15 +166,23 @@
             note      note
             handle    (concat device-key [type note])
             update-fn (fn [{:keys [data2-f]}]
-                        (let [new-state (state-maps/toggle! state x y)]
-                          (when-let [trigger-fn (get-in @grid/fn-grid [:up (keyword (str x "x" y))])]
-                            (trigger-fn))
-
-                          (if (state-maps/on? new-state x y)
-                            (led-on launchpad [x y])
-                            (led-off launchpad [x y]))))]
+                        (let [active-mode (state-maps/mode state)]
+                          (let [trigger-fn (get-in @grid/fn-grid [active-mode (keyword (str x "x" y))])]
+                            (if (some #{(state-maps/mode state)} [:user1 :user2])
+                              (when trigger-fn
+                                (trigger-fn)
+                                (led-on launchpad [x y]))
+                              (let [new-state (state-maps/toggle! state x y)]
+                                (if (state-maps/on? new-state x y)
+                                  (led-on launchpad [x y])
+                                  (led-off launchpad [x y])))))))]
         (println :handle handle)
-        (on-event handle update-fn (str "update-state-for" handle))))
+        (on-event handle update-fn (str "update-state-for" handle))
+
+        (on-event (concat device-key [:note-off note])
+                  (fn [_] (when (some #{(state-maps/mode state)} [:user1 :user2])
+                           (led-off launchpad [x y])))
+                  (str "update-led-for" [:note-off note]))))
 
     ;Control events
     (doseq [[k v] (-> launchpad-config :interfaces :grid-controls :controls)]
@@ -192,4 +203,5 @@
   "Fixed with a single launchpad for now"
   [rcvs stateful-devs]
   (intromation (first rcvs))
+  (led-on* (first rcvs) :up)
   [(register-event-handlers-for-launchpad (first stateful-devs) (first rcvs) 0)])
