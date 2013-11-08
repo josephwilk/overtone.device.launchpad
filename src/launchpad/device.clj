@@ -164,6 +164,9 @@
             handle    (concat device-key [type note])
             update-fn (fn [{:keys [data2-f]}]
                         (let [new-state (state-maps/toggle! state x y)]
+                          (when-let [trigger-fn (get-in @grid/fn-grid [:up (keyword (str x "x" y))])]
+                            (trigger-fn))
+
                           (if (state-maps/on? new-state x y)
                             (led-on launchpad [x y])
                             (led-off launchpad [x y]))))]

@@ -13,8 +13,14 @@ Grid buttons simply toggle on/off.
 
 ```clojure
 (use 'launchpad.core)
+(use 'overtone.live)
+(use 'overtone.inst.drum)
 
 (boot!)
+
+(bind :up :0x0 kick3)
+(bind :up :1x0 kick2)
+(bind :up :2x0 kick1)
 ```
 
 ## Todos

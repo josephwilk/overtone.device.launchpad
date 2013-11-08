@@ -1,9 +1,18 @@
 (ns launchpad.core
+  (:use
+   [overtone.live]
+   [overtone.inst.drum])
   (:require
    [overtone.studio.midi :as midi]
    [overtone.libs.event  :as e]
    [launchpad.mode       :as mode]
-   [launchpad.device     :as device]))
+   [launchpad.device     :as device]
+   [launchpad.grid       :as g]))
+
+(defn bind
+  "For a specific active mode bind a grid cell press to a function"
+  [mode cell fun]
+  (swap! g/fn-grid assoc-in [mode cell] fun))
 
 (defn boot! []
   (defonce launchpad-connected-receivers (midi/midi-find-connected-receivers "Launchpad"))

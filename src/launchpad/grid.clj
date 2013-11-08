@@ -1,5 +1,7 @@
 (ns launchpad.grid)
 
+(def fn-grid (atom {}))
+
 (defn empty []
   [[0 0 0 0 0 0 0 0]
    [0 0 0 0 0 0 0 0]
