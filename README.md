@@ -65,7 +65,7 @@ Experimenting with ways of interacting a Launchpad with Overtone and Clojure.
 
   (bind :up :vol (fn [launchpad]
                    (looper m dance-kick (map #(if (= % 1) true false)
-                                        (grid/row (state-maps/active-grid (:state launchpad)) 0)))))
+                                             (state-maps/row (:state launchpad) 0)))))
 
   (bind :up :arm (fn [launchpad] (stop))))
 

@@ -12,6 +12,8 @@
 
 (defn on? [state x y] (grid/on? (active-grid state) x y))
 
+(defn row [state n] (grid/row (active-grid state) n))
+
 (defn empty []
   {:active :up
    :up    (grid/empty)
