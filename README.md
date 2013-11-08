@@ -13,7 +13,7 @@ Experimenting with ways of interacting a Launchpad with Overtone and Clojure.
   * Grid buttons simply toggle state/light on/off.
 * user1, user1:
   * Enter mode where there is no persistent grid state.
-  * Grid buttons trigger on on key down and off on key up
+  * Grid buttons trigger led/fn key-down and off with key-up
 
 ```clojure
 (use 'launchpad.core)
@@ -50,10 +50,9 @@ Experimenting with ways of interacting a Launchpad with Overtone and Clojure.
 
 ## Todos
 
-Soo many things to do. Contribute, ideas and code.
+So many things to do. Contribute, ideas and code.
 
 https://github.com/josephwilk/overtone.device.launchpad/issues?labels=enhancement&page=1&state=open
-
 
 ## License
 
