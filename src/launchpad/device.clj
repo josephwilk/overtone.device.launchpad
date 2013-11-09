@@ -115,14 +115,16 @@
     (led-off* rcvr id)))
 
 (defn- led-on*
-  ([rcvr id] (led-on* rcvr id full-brightness :red))
   ([rcvr id brightness color]
      (when-let [{led-id :note midi-fn :fn} (led-details id)]
        (midi-fn rcvr led-id (velocity {:color color
                                        :intensity brightness})))))
-(defn led-on [launchpad id]
-  (let [rcvr (-> launchpad :rcv)]
-    (led-on* rcvr id)))
+
+(defn led-on
+  ([launchpad id] (led-on launchpad id full-brightness :red))
+  ([launchpad id brightness color]
+      (let [rcvr (-> launchpad :rcv)]
+        (led-on* rcvr id brightness color))))
 
 (defn render-grid [launchpad grid]
   (doseq [[x row] (map vector (iterate inc 0) grid)]
@@ -240,5 +242,5 @@
   "Fixed with a single launchpad for now"
   [rcvs stateful-devs]
   (intromation (first rcvs))
-  (led-on* (first rcvs) :up)
+  (led-on* (first rcvs) :up 1 :yellow)
   [(register-event-handlers-for-launchpad (first stateful-devs) (first rcvs) 0)])
