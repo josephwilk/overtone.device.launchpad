@@ -161,9 +161,10 @@ Support for interacting with intelligent machines. One day.
   (on-trigger count-trig-id
     (fn [beat]
       (let [current-row (mod (dec beat) 8)
-            last-row (mod (- beat 2) 8)]
-        (#'device/led-off* (first c/launchpad-connected-receivers) [7 last-row] )
-        (#'device/led-on* (first c/launchpad-connected-receivers) [7 current-row] 1 :yellow)))
+            last-row (mod (- beat 2) 8)
+            lp (first c/launchpad-kons)]
+        (device/led-on lp [7  current-row] 1 :yellow)
+        (device/led-off lp [7 last-row])))
     key3)
 
   (bind :up :vol  (fn [lp] (fire-buffer-sequence lp buf-0 0)))
