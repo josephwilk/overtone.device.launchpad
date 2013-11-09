@@ -6,6 +6,12 @@ Experimenting with ways of interacting a Launchpad with Overtone and Clojure.
 
 ![Launchpad S](http://s10.postimg.org/mj3szi1i1/launchpad_s.jpg)
 
+## Goal
+
+Provide defaults to get you moving quickly and start exploring while providing the scope later to completely customising the launchpad to your musical desires.
+
+Support for interacting with intelligent machines. One day.
+
 ## Usage
 
 * left, right, up and down
@@ -77,7 +83,7 @@ Experimenting with ways of interacting a Launchpad with Overtone and Clojure.
   (require '[launchpad.state-maps :as state-maps])
   (require '[launchpad.device :as device])
   (require '[launchpad.core :as c])
-  (use 'overtone.synth.timing)
+  (require '[overtone.synth.timing :as timing])
   (use '[overtone.helpers.lib :only [uuid]])
 
   (defonce count-trig-id (trig-id))
@@ -99,12 +105,12 @@ Experimenting with ways of interacting a Launchpad with Overtone and Clojure.
 
   (def BEAT-FRACTION "Number of global pulses per beat" 30)
 
-  (defsynth root-trg [rate 100] (out:kr root-trg-bus (impulse:kr rate)))
-  (defsynth root-cnt [] (out:kr root-cnt-bus (pulse-count:kr (in:kr root-trg-bus))))
-  (defsynth beat-trg [div BEAT-FRACTION] (out:kr beat-trg-bus (pulse-divider (in:kr root-trg-bus) div)))
-  (defsynth beat-cnt [] (out:kr beat-cnt-bus (pulse-count (in:kr beat-trg-bus))))
+  (def r-cnt (timing/counter :in-bus root-trg-bus :out-bus root-cnt-bus))
+  (def r-trg (timing/trigger :rate 100 :in-bus root-trg-bus))
+  (def b-cnt (timing/counter :in-bus beat-trg-bus :out-bus beat-cnt-bus))
+  (def b-trg (timing/divider :div BEAT-FRACTION :in-bus root-trg-bus :out-bus beat-trg-bus))
 
-  ;:Used sending out beat event
+  ;;Sending out beat event
   (defsynth get-beat [] (send-trig (in:kr beat-trg-bus) count-trig-id (+ (in:kr beat-cnt-bus) 1)))
 
   (def kick-s  (sample (freesound-path 777)))
@@ -129,11 +135,6 @@ Experimenting with ways of interacting a Launchpad with Overtone and Clojure.
                     (scaled-play-buf 1 buf rate bar-trg)
                     (demand bar-trg 0 (dbrown 200 20000 50 INF))
                     (lin-lin:kr (lf-tri:kr 0.01) -1 1 0.1 0.9)))))))
-
-  (def r-cnt (root-cnt))
-  (def b-cnt (beat-cnt))
-  (def b-trg (beat-trg))
-  (def r-trg (root-trg))
 
   (def kicks (doall
               (for [x (range 8)]
