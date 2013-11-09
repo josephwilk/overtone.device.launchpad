@@ -14,6 +14,8 @@
 
 (defn row [state n] (grid/row (active-grid state) n))
 
+(defn column [state n] (grid/col (active-grid state) n))
+
 (defn empty []
   {:active :up
    :up    (grid/empty)
