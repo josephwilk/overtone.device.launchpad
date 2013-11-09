@@ -162,9 +162,21 @@ Support for interacting with intelligent machines. One day.
     (fn [beat]
       (let [current-row (mod (dec beat) 8)
             last-row (mod (- beat 2) 8)
-            lp (first c/launchpad-kons)]
-        (device/led-on lp [7  current-row] 1 :yellow)
-        (device/led-off lp [7 last-row])))
+            lp (first c/launchpad-kons)
+            col (state-maps/column (:state lp) current-row)
+            last-col (state-maps/column (:state lp) last-row)]
+
+        (device/led-off lp [7 last-row])
+        (device/led-on  lp [7 current-row] 1 :yellow)
+
+        (doseq [r (range 0 3)]
+          (if (= 1 (nth last-col r))
+            (device/led-on lp [r last-row] 1 :green)
+            (device/led-off lp [r last-row]))
+
+          (if (= (nth col r) 1)
+            (device/led-on  lp  [r current-row] 3 :green)
+            (device/led-on  lp  [r current-row] 1 :yellow)))))
     key3)
 
   (bind :up :vol  (fn [lp] (fire-buffer-sequence lp buf-0 0)))
