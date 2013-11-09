@@ -75,7 +75,12 @@ Experimenting with ways of interacting a Launchpad with Overtone and Clojure.
 (do
   (require '[launchpad.grid :as grid])
   (require '[launchpad.state-maps :as state-maps])
+  (require '[launchpad.device :as device])
+  (require '[launchpad.core :as c])
   (use 'overtone.synth.timing)
+  (use '[overtone.helpers.lib :only [uuid]])
+
+  (defonce count-trig-id (trig-id))
 
   (defonce buf-0 (buffer 8))
   (defonce buf-1 (buffer 8))
@@ -98,6 +103,9 @@ Experimenting with ways of interacting a Launchpad with Overtone and Clojure.
   (defsynth root-cnt [] (out:kr root-cnt-bus (pulse-count:kr (in:kr root-trg-bus))))
   (defsynth beat-trg [div BEAT-FRACTION] (out:kr beat-trg-bus (pulse-divider (in:kr root-trg-bus) div)))
   (defsynth beat-cnt [] (out:kr beat-cnt-bus (pulse-count (in:kr beat-trg-bus))))
+
+  ;:Used sending out beat event
+  (defsynth get-beat [] (send-trig (in:kr beat-trg-bus) count-trig-id (+ (in:kr beat-cnt-bus) 1)))
 
   (def kick-s  (sample (freesound-path 777)))
   (def click-s (sample (freesound-path 406)))
@@ -144,6 +152,18 @@ Experimenting with ways of interacting a Launchpad with Overtone and Clojure.
                   (mono-sequencer :buf subby-s :beat-num x :sequencer buf-3))))
 
   (defn fire-buffer-sequence [lp buf row] (buffer-write! buf (state-maps/row (:state lp) row)))
+
+  (def key3 (uuid))
+
+  (defonce get-beat-s (get-beat))
+
+  (on-trigger count-trig-id
+    (fn [beat]
+      (let [current-row (mod (dec beat) 8)
+            last-row (mod (- beat 2) 8)]
+        (#'device/led-off* (first c/launchpad-connected-receivers) [7 last-row] )
+        (#'device/led-on* (first c/launchpad-connected-receivers) [7 current-row] 1 :yellow)))
+    key3)
 
   (bind :up :vol  (fn [lp] (fire-buffer-sequence lp buf-0 0)))
   (bind :up :pan  (fn [lp] (fire-buffer-sequence lp buf-1 1)))
