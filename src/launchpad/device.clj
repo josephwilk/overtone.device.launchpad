@@ -51,14 +51,14 @@
                   :user2   {:note 110 :type :control-change}}
 
                  :side-controls
-                 {:vol     {:note 8   :type :note-on}
-                  :pan     {:note 24  :type :note-on}
-                  :snda    {:note 40  :type :note-on}
-                  :sndb    {:note 56  :type :note-on}
-                  :stop    {:note 72  :type :note-on}
-                  :trkon   {:note 88  :type :note-on}
-                  :solo    {:note 104 :type :note-on}
-                  :arm     {:note 120 :type :note-on}}}
+                 {:vol     {:note 8   :type :note-on :row 0}
+                  :pan     {:note 24  :type :note-on :row 1}
+                  :snda    {:note 40  :type :note-on :row 2}
+                  :sndb    {:note 56  :type :note-on :row 3}
+                  :stop    {:note 72  :type :note-on :row 4}
+                  :trkon   {:note 88  :type :note-on :row 5}
+                  :solo    {:note 104 :type :note-on :row 6}
+                  :arm     {:note 120 :type :note-on :row 7}}}
 
                 :leds {:name "LEDs"
                        :type :midi-out
@@ -181,11 +181,12 @@
                 (led-on launchpad [x y])
                 (led-off launchpad [x y])))))))))
 
-(defn- side-event-handler [launchpad name]
+(defn- side-event-handler [launchpad name row]
   (let [state (:state launchpad)]
     (fn [{:keys [data2-f]}]
       (let [active-mode (state-maps/mode state)]
         (let [trigger-fn (get-in @grid/fn-grid [active-mode (keyword name)])]
+          (state-maps/toggle-side! state row)
           (when trigger-fn
             (if (= 0 (arg-count trigger-fn))
               (trigger-fn)
@@ -218,8 +219,9 @@
     (doseq [[k v] (-> launchpad-config :interfaces :grid-controls :side-controls)]
       (let [type      (:type v)
             note      (:note v)
+            row       (:row v)
             handle    (concat device-key [type note])
-            update-fn (side-event-handler launchpad k)]
+            update-fn (side-event-handler launchpad k row)]
         (println :handle handle)
         (on-event handle update-fn (str "update-state-for" handle))))
 
