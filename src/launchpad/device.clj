@@ -241,8 +241,9 @@
     launchpad))
 
 (defn merge-launchpad-kons
-  "Fixed with a single launchpad for now"
   [rcvs stateful-devs]
-  (intromation (first rcvs))
-  (led-on* (first rcvs) :up 1 :yellow)
-  [(register-event-handlers-for-launchpad (first stateful-devs) (first rcvs) 0)])
+  (doseq [rcv rcvs]
+    (led-on* rcv :up 1 :yellow)
+    (intromation rcv))
+  (map (fn [[stateful-dev rcv id]] (register-event-handlers-for-launchpad stateful-dev rcv id))
+    (map vector stateful-devs rcvs (range))))
