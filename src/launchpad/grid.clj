@@ -2,15 +2,21 @@
 
 (def fn-grid (atom {}))
 
+(def side-btns 8)
+
 (defn empty []
-  [[0 0 0 0 0 0 0 0]
-   [0 0 0 0 0 0 0 0]
-   [0 0 0 0 0 0 0 0]
-   [0 0 0 0 0 0 0 0]
-   [0 0 0 0 0 0 0 0]
-   [0 0 0 0 0 0 0 0]
-   [0 0 0 0 0 0 0 0]
-   [0 0 0 0 0 0 0 0]])
+  [[0 0 0 0 0 0 0 0 0]
+   [0 0 0 0 0 0 0 0 0]
+   [0 0 0 0 0 0 0 0 0]
+   [0 0 0 0 0 0 0 0 0]
+   [0 0 0 0 0 0 0 0 0]
+   [0 0 0 0 0 0 0 0 0]
+   [0 0 0 0 0 0 0 0 0]
+   [0 0 0 0 0 0 0 0 0]])
+
+(defn project-8x8 [full-grid] (map #(butlast) full-grid))
+
+(defn side [full-grid] (map #(last) full-grid) )
 
 (defn toggle [grid x y]
   (let [old-row (-> grid (nth x) (vec))

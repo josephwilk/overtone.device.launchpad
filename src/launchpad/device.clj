@@ -28,14 +28,14 @@
             :double-buffering 0})
 
 (def grid-notes
-  [(range 0 8)
-   (range 16 24)
-   (range 32 40)
-   (range 48 56)
-   (range 64 72)
-   (range 80 88)
-   (range 96 104)
-   (range 112 120)])
+  [(range 0 9)
+   (range 16 25)
+   (range 32 41)
+   (range 48 57)
+   (range 64 73)
+   (range 80 89)
+   (range 96 105)
+   (range 112 121)])
 
 (defn- coordinate->note [x y] (grid/cell grid-notes x y))
 
@@ -83,6 +83,8 @@
                                   :solo    {:note 104 :fn midi-note-on}
                                   :arm     {:note 120 :fn midi-note-on}}
                        :grid {:fn midi-note-on}}}})
+
+(defn side->row [name] (-> launchpad-config :interfaces :grid-controls :side-controls name :row))
 
 (defn velocity [{color :color intensity :intensity}]
   (if (some #{color} led-colors)
@@ -183,12 +185,12 @@
                 (led-on launchpad [x y])
                 (led-off launchpad [x y])))))))))
 
-(defn- side-event-handler [launchpad name row]
+(defn- side-event-handler [launchpad name]
   (let [state (:state launchpad)]
     (fn [{:keys [data2-f]}]
       (let [active-mode (state-maps/mode state)]
         (let [trigger-fn (get-in @grid/fn-grid [active-mode (keyword name)])]
-          (state-maps/toggle-side! state row)
+          (state-maps/toggle-side! state (side->row name))
           (when trigger-fn
             (if (= 0 (arg-count trigger-fn))
               (trigger-fn)
@@ -203,7 +205,7 @@
         state      (:state device)]
 
     ;;Grid events
-    (doseq [[x row] (map vector (iterate inc 0) grid-notes)
+    (doseq [[x row] (map vector (iterate inc 0) (grid/project-8x8 grid-notes))
             [y note] (map vector (iterate inc 0) row)]
       (let [type      :note-on
             note      note
