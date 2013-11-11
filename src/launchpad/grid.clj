@@ -23,7 +23,6 @@
 
 (defn on? [grid x y] (not= 0 (cell grid x y)))
 
-(defn row [grid n]
-  (nth grid n))
+(defn row [grid n] (nth grid n))
 
 (defn col [grid n] (map #(nth % n) grid))
