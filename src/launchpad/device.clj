@@ -225,7 +225,7 @@
             note      (:note v)
             row       (:row v)
             handle    (concat device-key [type note])
-            update-fn (side-event-handler launchpad k row)]
+            update-fn (side-event-handler launchpad k)]
         (println :handle handle)
         (on-event handle update-fn (str "update-state-for" handle))))
 
@@ -247,7 +247,7 @@
 (defn merge-launchpad-kons
   [rcvs stateful-devs]
   (doseq [rcv rcvs]
-    (led-on* rcv :up 1 :yellow)
-    (intromation rcv))
+    (intromation rcv)
+    (led-on* rcv :up 1 :yellow))
   (map (fn [[stateful-dev rcv id]] (register-event-handlers-for-launchpad stateful-dev rcv id))
     (map vector stateful-devs rcvs (range))))

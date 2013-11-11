@@ -14,7 +14,7 @@
    [0 0 0 0 0 0 0 0 0]
    [0 0 0 0 0 0 0 0 0]])
 
-(defn project-8x8 [full-grid] (map #(butlast) full-grid))
+(defn project-8x8 [full-grid] (map butlast full-grid))
 
 (defn side [full-grid] (map #(last) full-grid) )
 
