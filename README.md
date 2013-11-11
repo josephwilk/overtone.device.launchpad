@@ -200,6 +200,10 @@ https://github.com/josephwilk/overtone.device.launchpad/issues?labels=enhancemen
 
 * http://www.youtube.com/watch?v=xTf2pTbjU-Y
 
+## Launchpad documentation
+
+* http://d19ulaff0trnck.cloudfront.net/sites/default/files/novation/downloads/4700/launchpad-s-prm.pdf
+
 ## License
 
 Copyright © 2013 Joseph Wilk
