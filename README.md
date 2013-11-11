@@ -196,6 +196,10 @@ So many things to do. Contribute, ideas and code.
 
 https://github.com/josephwilk/overtone.device.launchpad/issues?labels=enhancement&page=1&state=open
 
+## Demos
+
+* http://www.youtube.com/watch?v=xTf2pTbjU-Y
+
 ## License
 
 Copyright © 2013 Joseph Wilk
