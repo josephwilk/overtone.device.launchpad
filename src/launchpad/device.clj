@@ -47,8 +47,10 @@
                   :down    {:note 105 :type :control-change}
                   :left    {:note 106 :type :control-change}
                   :right   {:note 107 :type :control-change}
+                  :session {:note 108 :type :control-change}
                   :user1   {:note 109 :type :control-change}
-                  :user2   {:note 110 :type :control-change}}
+                  :user2   {:note 110 :type :control-change}
+                  :mixer   {:note 111 :type :control-change}}
 
                  :side-controls
                  {:vol     {:note 8   :type :note-on :row 0}
