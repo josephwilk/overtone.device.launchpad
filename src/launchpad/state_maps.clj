@@ -10,6 +10,10 @@
     (swap! state assoc (mode state) new-grid)
     state))
 
+(defn trigger-fn
+  ([state x y]  (trigger-fn state (str x "x" y)))
+  ([state name] (get-in @grid/fn-grid [(mode state) (keyword name)])))
+
 (defn toggle-side! [state x] (toggle! state x grid/side-btns))
 (defn on? [state x y] (grid/on? (active-grid state) x y))
 (defn row [state n] (grid/row (active-grid state) n))

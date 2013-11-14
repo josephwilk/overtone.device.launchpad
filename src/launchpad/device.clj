@@ -172,29 +172,25 @@
 (defn- grid-event-handler [launchpad x y]
   (let [state (:state launchpad)]
     (fn [{:keys [data2-f]}]
-      (let [active-mode (state-maps/mode state)]
-        (let [trigger-fn (get-in @grid/fn-grid [active-mode (keyword (str x "x" y))])]
-          (when trigger-fn
-            (if (= 0 (arg-count trigger-fn))
-              (trigger-fn)
-              (trigger-fn launchpad)))
-          (if (some #{(state-maps/mode state)} [:user1 :user2])
+      (when-let [trigger-fn (state-maps/trigger-fn state x y)]
+        (if (= 0 (arg-count trigger-fn))
+          (trigger-fn)
+          (trigger-fn launchpad)))
+      (if (some #{(state-maps/mode state)} [:user1 :user2])
+        (led-on launchpad [x y])
+        (let [new-state (state-maps/toggle! state x y)]
+          (if (state-maps/on? new-state x y)
             (led-on launchpad [x y])
-            (let [new-state (state-maps/toggle! state x y)]
-              (if (state-maps/on? new-state x y)
-                (led-on launchpad [x y])
-                (led-off launchpad [x y])))))))))
+            (led-off launchpad [x y])))))))
 
 (defn- side-event-handler [launchpad name]
   (let [state (:state launchpad)]
     (fn [{:keys [data2-f]}]
-      (let [active-mode (state-maps/mode state)]
-        (let [trigger-fn (get-in @grid/fn-grid [active-mode (keyword name)])]
-          (state-maps/toggle-side! state (side->row name))
-          (when trigger-fn
-            (if (= 0 (arg-count trigger-fn))
-              (trigger-fn)
-              (trigger-fn launchpad))))))))
+      (state-maps/toggle-side! state (side->row name))
+      (when-let [trigger-fn (state-maps/trigger-fn state name)]
+        (if (= 0 (arg-count trigger-fn))
+          (trigger-fn)
+          (trigger-fn launchpad))))))
 
 (defn- register-event-handlers-for-launchpad
   [device rcv idx]
