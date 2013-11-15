@@ -152,7 +152,7 @@ Support for interacting with intelligent machines. One day.
                 (for [x (range 8)]
                   (mono-sequencer :buf subby-s :beat-num x :sequencer buf-3))))
 
-  (defn fire-buffer-sequence [lp buf row] (buffer-write! buf (state-maps/row (:state lp) row)))
+  (defn fire-buffer-sequence [lp buf row] (buffer-write! buf (state-maps/grid-row (:state lp) row)))
 
   (def key3 (uuid))
 
@@ -188,6 +188,7 @@ Support for interacting with intelligent machines. One day.
                           (buffer-write! buf-2 [0 0 0 0 0 0 0 0])
                           (buffer-write! buf-3 [0 0 0 0 0 0 0 0]))))
 
+(stop)
 ```
 
 ## Todos

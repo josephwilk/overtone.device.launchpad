@@ -31,4 +31,6 @@
 
 (defn row [grid n] (nth grid n))
 
+(defn grid-row [grid n] (butlast (nth grid n)))
+
 (defn col [grid n] (map #(nth % n) grid))

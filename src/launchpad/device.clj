@@ -130,12 +130,15 @@
       (let [rcvr (-> launchpad :rcv)]
         (led-on* rcvr id brightness color))))
 
+(defn toggle-led [launchpad id cell]
+  (if-not (= 0 cell)
+    (led-on launchpad id)
+    (led-off launchpad id)))
+
 (defn render-grid [launchpad grid]
-  (doseq [[x row] (map vector (iterate inc 0) grid)]
-    (doseq [[y col] (map vector (iterate inc 0) row)]
-      (if (= 1 col)
-        (led-on launchpad [x y])
-        (led-off launchpad [x y])))))
+  (doseq [[x row] (map vector (iterate inc 0) grid)
+          [y cell] (map vector (iterate inc 0) row)]
+    (toggle-led launchpad [x y] cell)))
 
 (defn reset-launchpad [rcvr] (midi-control rcvr 0 0))
 
@@ -179,9 +182,7 @@
       (if (some #{(state-maps/mode state)} [:user1 :user2])
         (led-on launchpad [x y])
         (let [new-state (state-maps/toggle! state x y)]
-          (if (state-maps/on? new-state x y)
-            (led-on launchpad [x y])
-            (led-off launchpad [x y])))))))
+          (toggle-led launchpad [x y] (state-maps/on? new-state x y)))))))
 
 (defn- side-event-handler [launchpad name]
   (let [state (:state launchpad)]
@@ -245,5 +246,7 @@
   (doseq [rcv rcvs]
     (intromation rcv)
     (led-on* rcv :up 1 :yellow))
-  (map (fn [[stateful-dev rcv id]] (register-event-handlers-for-launchpad stateful-dev rcv id))
-    (map vector stateful-devs rcvs (range))))
+  (doall
+   (map (fn [[stateful-dev rcv id]]
+          (register-event-handlers-for-launchpad stateful-dev rcv id))
+        (map vector stateful-devs rcvs (range)))))
