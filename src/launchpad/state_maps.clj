@@ -44,4 +44,4 @@
 (comment
   (use '[launchpad.core] :reload)
   (column-off (:state (first launchpad-kons)) 8)
-  (column (:state (first launchpad-kons)) 8))))
+  (column (:state (first launchpad-kons)) 8))
