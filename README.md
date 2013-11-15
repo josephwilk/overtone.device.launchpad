@@ -16,7 +16,7 @@ Support for interacting with intelligent machines. One day.
 
 Adding Launchpad as a dependency in your project:
 
-`https://clojars.org/launchpad`
+https://clojars.org/launchpad
 
 ## Usage
 
