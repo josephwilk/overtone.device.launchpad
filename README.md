@@ -12,9 +12,15 @@ Provide defaults to get you moving quickly and start exploring while providing t
 
 Support for interacting with intelligent machines. One day.
 
+## Clojars
+
+Adding Launchpad as a dependency in your project:
+
+`https://clojars.org/launchpad`
+
 ## Usage
 
-The default (setup by launchpad.core):
+launchpad.core sets up some useful defaults to make your device useful:
 
 * All top control buttons except user1/2
   * Enter mode where each grid remembers keys pressed.
@@ -23,7 +29,11 @@ The default (setup by launchpad.core):
   * Enter mode where there is no persistent grid state.
   * Grid buttons trigger led/fn key-down and off with key-up
 
+Some examples of how you can use the grid to bind interesting things:
+
 Binding demos: https://github.com/josephwilk/overtone.device.launchpad/blob/master/docs/demo.clj
+
+If you want to try from the repl
 
 ```
 lein repl
