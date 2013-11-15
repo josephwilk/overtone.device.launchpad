@@ -1,7 +1,7 @@
-(use '[launchpad.core] :reload)
-(use 'overtone.live)
-
-(boot!)
+(do
+  (use '[launchpad.core] :reload)
+  (use 'overtone.live)
+  (boot!))
 
 ;;Drum kit
 (do
@@ -69,8 +69,10 @@
   (defonce buf-2 (buffer 8))
   (defonce buf-3 (buffer 8))
   (defonce buf-4 (buffer 8))
+  (defonce buf-5 (buffer 8))
+  (defonce buf-6 (buffer 8))
 
-  (defonce all-buffers [buf-0 buf-1 buf-2 buf-3 buf-4])
+  (defonce all-buffers [buf-0 buf-1 buf-2 buf-3 buf-4 buf-5 buf-6])
 
   (doseq [buf all-buffers] (buffer-write! buf [0 0 0 0 0 0 0 0]))
 
@@ -79,7 +81,8 @@
   (defonce beat-trg-bus (control-bus)) ;; beat pulse (fraction of root)
   (defonce beat-cnt-bus (control-bus)) ;; beat count
 
-  (def BEAT-FRACTION "Number of global pulses per beat" 30)
+  (def BEAT-FRACTION "Number of global pulses per beat" 60)
+  (def current-beat (atom BEAT-FRACTION))
 
   (def r-cnt (timing/counter :in-bus root-trg-bus :out-bus root-cnt-bus))
   (def r-trg (timing/trigger :rate 100 :in-bus root-trg-bus))
@@ -93,7 +96,10 @@
   (def click-s    (sample (freesound-path 406)))
   (def boom-s     (sample (freesound-path 33637)))
   (def subby-s    (sample (freesound-path 25649)))
+  (def choir-s    (sample (freesound-path 172323)))
   (def godzilla-s (sample (freesound-path 206078)))
+  (def snow-running-s (sample (freesound-path 160605)))
+  (def harp-s       (sample (freesound-path 27130)))
 
   (defsynth mono-sequencer
     "Plays a single channel audio buffer."
@@ -113,25 +119,13 @@
                     (demand bar-trg 0 (dbrown 200 20000 50 INF))
                     (lin-lin:kr (lf-tri:kr 0.01) -1 1 0.1 0.9)))))))
 
-  (def kicks (doall
-              (for [x (range 8)]
-                (mono-sequencer :buf kick-s :beat-num x :sequencer buf-0))))
-
-  (def clicks (doall
-               (for [x (range 8)]
-                 (mono-sequencer :buf click-s :beat-num x :sequencer buf-1))))
-
-  (def booms (doall
-              (for [x (range 8)]
-                (mono-sequencer :buf boom-s :beat-num x :sequencer buf-2))))
-
-  (def subbies (doall
-                (for [x (range 8)]
-                  (mono-sequencer :buf subby-s :beat-num x :sequencer buf-3))))
-
-  (def godzilla (doall
-                 (for [x (range 8)]
-                   (mono-sequencer :buf godzilla-s :beat-num x :sequencer buf-3))))
+  (def kicks     (doall (for [x (range 8)] (mono-sequencer :buf kick-s  :beat-num x :sequencer buf-0))))
+  (def clicks    (doall (for [x (range 8)] (mono-sequencer :buf click-s :beat-num x :sequencer buf-1))))
+  (def booms     (doall (for [x (range 8)] (mono-sequencer :buf boom-s  :beat-num x :sequencer buf-2))))
+  (def subbies   (doall (for [x (range 8)] (mono-sequencer :buf subby-s :beat-num x :sequencer buf-3))))
+  (def godzilla  (doall (for [x (range 8)] (mono-sequencer :buf godzilla-s :beat-num x :sequencer buf-4))))
+  (def choir     (doall (for [x (range 8)] (mono-sequencer :buf choir-s :beat-num x :sequencer buf-5))))
+  (def snow-feet (doall (for [x (range 8)] (mono-sequencer :sequencer 0 :buf snow-running-s :beat-num x :sequencer buf-6))))
 
   (defn fire-buffer-sequence [lp buf row] (buffer-write! buf (state-maps/grid-row (:state lp) row)))
 
@@ -163,19 +157,40 @@
               (device/led-off lp [r last-row]))
 
             (if (= (nth col r) 1)
-              (device/led-on  lp  [r current-row] 3 :green)
-              (device/led-on  lp  [r current-row] 1 :yellow))))))
+              (device/led-on lp  [r current-row] 3 :green)
+              (device/led-on lp  [r current-row] 1 :yellow))))))
     key3)
 
-  (bind :up :vol  (fn [lp] (fire-buffer-sequence lp buf-0 0)))
-  (bind :up :pan  (fn [lp] (fire-buffer-sequence lp buf-1 1)))
-  (bind :up :snda (fn [lp] (fire-buffer-sequence lp buf-2 2)))
-  (bind :up :sndb (fn [lp] (fire-buffer-sequence lp buf-3 3)))
+  (bind :up :vol   (fn [lp] (fire-buffer-sequence lp buf-0 0)))
+  (bind :up :pan   (fn [lp] (fire-buffer-sequence lp buf-1 1)))
+  (bind :up :snda  (fn [lp] (fire-buffer-sequence lp buf-2 2)))
+  (bind :up :sndb  (fn [lp] (fire-buffer-sequence lp buf-3 3)))
+  (bind :up :stop  (fn [lp] (fire-buffer-sequence lp buf-4 4)))
+  (bind :up :trkon (fn [lp] (fire-buffer-sequence lp buf-5 5)))
+  (bind :up :solo  (fn [lp] (fire-buffer-sequence lp buf-6 6)))
+
+  ;;Adjust bpm
+  (bind :up :7x6 (fn [] (ctl b-trg :div (swap! current-beat inc))))
+  (bind :up :7x5 (fn [] (ctl b-trg :div (swap! current-beat dec))))
+
+  ;;Shutdown
   (bind :up :arm  (fn [lp]
                     (doseq [buf all-buffers] (buffer-write! buf [0 0 0 0 0 0 0 0]))
                     (state-maps/column-off (:state lp) 8)
                     (device/command-right-leds-all-off lp)
                     (device/render-grid lp (state-maps/active-grid (:state lp))))))
+
+(do
+  (bind :left :0x0 (fn [lp] (def h (harp-s :loop? true :amp 0.3)))))
+
+(comment
+  (ctl b-trg :div 60)
+
+  (def h (harp-s :loop? true :amp 0.3))
+  (ctl h :amp 0.25)
+  (ctl h :bmp 200)
+  (kill h)
+  (ctl snow-feet :amp 0.0))
 
 (comment
   (do
