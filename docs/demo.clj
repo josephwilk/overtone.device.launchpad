@@ -29,29 +29,11 @@
   (bind :user1 :3x2 #(haziti-clap))
   (bind :user1 :4x2 #(bing)))
 
-;;Use LED row sequences to indicate when beats should strike
+;;Trigger samples
+
 (do
-  (require '[launchpad.grid :as grid])
-  (require '[launchpad.state-maps :as state-maps])
-  (use 'overtone.inst.drum)
-
-  (def m (metronome 240))
-
-  (defn looper
-    ([nome sound state] (looper nome sound state 0))
-    ([nome sound state p]
-        (let [p (if (> p 7) 0 p)
-              beat (nome)]
-          (at (nome beat) (do (when (nth state p) (sound))))
-          (apply-at (nome (inc beat)) looper [nome sound state (inc p)]))))
-
-  (defn fire-sequence [lp fun row]
-    (looper m fun (map #(if (= % 1) true false) (state-maps/row (:state lp) row))))
-
-  (bind :down :vol  (fn [lp] (fire-sequence lp kick 0)))
-  (bind :down :pan  (fn [lp] (fire-sequence lp snare 1)))
-  (bind :down :snda (fn [lp] (fire-sequence lp clap 2)))
-  (bind :down :arm  (fn [lp] (stop))))
+  (def harp-s (sample (freesound-path 27130)))
+  (bind :left :0x0 (fn [lp] (def h (harp-s :loop? true :amp 0.3)))))
 
 ;;Use LED row sequences to indicate when beats strike (uses samples + supercollider counter)
 (do
@@ -99,7 +81,6 @@
   (def choir-s    (sample (freesound-path 172323)))
   (def godzilla-s (sample (freesound-path 206078)))
   (def snow-running-s (sample (freesound-path 160605)))
-  (def harp-s       (sample (freesound-path 27130)))
 
   (defsynth mono-sequencer
     "Plays a single channel audio buffer."
@@ -180,17 +161,31 @@
                     (device/command-right-leds-all-off lp)
                     (device/render-grid lp (state-maps/active-grid (:state lp))))))
 
-(do
-  (bind :left :0x0 (fn [lp] (def h (harp-s :loop? true :amp 0.3)))))
 
-(comment
-  (ctl b-trg :div 60)
+                    ;;Use LED row sequences to indicate when beats should strike
+                    (do
+                      (require '[launchpad.grid :as grid])
+                      (require '[launchpad.state-maps :as state-maps])
+                      (use 'overtone.inst.drum)
 
-  (def h (harp-s :loop? true :amp 0.3))
-  (ctl h :amp 0.25)
-  (ctl h :bmp 200)
-  (kill h)
-  (ctl snow-feet :amp 0.0))
+                      (def m (metronome 240))
+
+                      (defn looper
+                        ([nome sound state] (looper nome sound state 0))
+                        ([nome sound state p]
+                            (let [p (if (> p 7) 0 p)
+                                  beat (nome)]
+                              (at (nome beat) (do (when (nth state p) (sound))))
+                              (apply-at (nome (inc beat)) looper [nome sound state (inc p)]))))
+
+                      (defn fire-sequence [lp fun row]
+                        (looper m fun (map #(if (= % 1) true false) (state-maps/row (:state lp) row))))
+
+                      (bind :down :vol  (fn [lp] (fire-sequence lp kick 0)))
+                      (bind :down :pan  (fn [lp] (fire-sequence lp snare 1)))
+                      (bind :down :snda (fn [lp] (fire-sequence lp clap 2)))
+                      (bind :down :arm  (fn [lp] (stop))))
+
 
 (comment
   (do
