@@ -23,7 +23,7 @@ The default (setup by launchpad.core):
   * Enter mode where there is no persistent grid state.
   * Grid buttons trigger led/fn key-down and off with key-up
 
-Binding demos: https://github.com/josephwilk/overtone.device.launchpad/blob/master/docs/demo.cl
+Binding demos: https://github.com/josephwilk/overtone.device.launchpad/blob/master/docs/demo.clj
 
 ## Todos
 
