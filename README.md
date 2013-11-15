@@ -25,6 +25,11 @@ The default (setup by launchpad.core):
 
 Binding demos: https://github.com/josephwilk/overtone.device.launchpad/blob/master/docs/demo.clj
 
+```
+lein repl
+(load-file "docs/demo.clj")
+```
+
 ## Todos
 
 So many things to do. Contribute, ideas and code.

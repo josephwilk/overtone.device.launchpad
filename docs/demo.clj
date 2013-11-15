@@ -70,11 +70,9 @@
   (defonce buf-3 (buffer 8))
   (defonce buf-4 (buffer 8))
 
-  (buffer-write! buf-0 [0 0 0 0 0 0 0 0])
-  (buffer-write! buf-1 [0 0 0 0 0 0 0 0])
-  (buffer-write! buf-2 [0 0 0 0 0 0 0 0])
-  (buffer-write! buf-3 [0 0 0 0 0 0 0 0])
-  (buffer-write! buf-4 [0 0 0 0 0 0 0 0])
+  (defonce all-buffers [buf-0 buf-1 buf-2 buf-3 buf-4])
+
+  (doseq [buf all-buffers] (buffer-write! buf [0 0 0 0 0 0 0 0]))
 
   (defonce root-trg-bus (control-bus)) ;; global metronome pulse
   (defonce root-cnt-bus (control-bus)) ;; global metronome count
@@ -173,15 +171,11 @@
   (bind :up :pan  (fn [lp] (fire-buffer-sequence lp buf-1 1)))
   (bind :up :snda (fn [lp] (fire-buffer-sequence lp buf-2 2)))
   (bind :up :sndb (fn [lp] (fire-buffer-sequence lp buf-3 3)))
-  (bind :up :arm  (fn [lp] (buffer-write! buf-0 [0 0 0 0 0 0 0 0])
-                          (buffer-write! buf-1 [0 0 0 0 0 0 0 0])
-                          (buffer-write! buf-2 [0 0 0 0 0 0 0 0])
-                          (buffer-write! buf-3 [0 0 0 0 0 0 0 0])
-                          (buffer-write! buf-4 [0 0 0 0 0 0 0 0])
-                          (state-maps/column-off (:state lp) 8)
-                          (device/command-right-leds-all-off lp)))
-
-  )
+  (bind :up :arm  (fn [lp]
+                    (doseq [buf all-buffers] (buffer-write! buf [0 0 0 0 0 0 0 0]))
+                    (state-maps/column-off (:state lp) 8)
+                    (device/command-right-leds-all-off lp)
+                    (device/render-grid lp (state-maps/active-grid (:state lp))))))
 
 (comment
   (do
