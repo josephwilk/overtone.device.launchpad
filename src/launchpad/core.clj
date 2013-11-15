@@ -6,16 +6,17 @@
    [overtone.studio.midi :as midi]
    [overtone.libs.event  :as e]
    [launchpad.mode       :as mode]
+   [launchpad.state-maps :as state-maps]
    [launchpad.device     :as device]
    [launchpad.grid       :as g]))
 
 (defn bind
-  "For a specific mode bind a grid cell key press to a function. 
+  "For a specific mode bind a grid cell key press to a function.
    If function takes an argument it will be passed a stateful launchpad device."
   [mode cell fun]
   (swap! g/fn-grid assoc-in [mode cell] fun))
 
-(defn boot! 
+(defn boot!
   "Setup event bindings for launchpad devices."
   []
   (defonce launchpad-connected-receivers (midi/midi-find-connected-receivers "Launchpad"))
@@ -47,7 +48,27 @@
 
     (e/on-event [:Launchpad :control launchpad-id :user2]
                 (fn [m] (mode/trigger (:launchpad m) :user2))
-                ::user2-mode))
+                ::user2-mode)
+
+    (e/on-event [:Launchpad :control launchpad-id :mixer]
+                (fn [m] (mode/trigger (:launchpad m) :mixer))
+                ::mixer-mode)
+
+    (e/on-event [:Launchpad :control launchpad-id :session]
+                (fn [m] (mode/trigger (:launchpad m) :session))
+                ::session-mode)
+
+    (e/on-event [:Launchpad :grid-off launchpad-id :user1]
+                (fn [{lp :launchpad [x y] :id}]
+                  (state-maps/toggle! (:state lp) x y)
+                  (device/led-off lp [x y]))
+                (str "grid-user-1-off"))
+
+    (e/on-event [:Launchpad :grid-off launchpad-id :user2]
+                (fn [{lp :launchpad [x y] :id}]
+                  (state-maps/toggle! (:state lp) x y)
+                  (device/led-off lp [x y]))
+                (str "grid-user-2-off")))
 
   (comment
     (boot!)

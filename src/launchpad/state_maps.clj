@@ -19,6 +19,8 @@
 
 (defn grid-row [state n] (grid/grid-row (active-grid state) n))
 
+(defn cell [state x y] (grid/cell (active-grid state) x y))
+
 (defn row [state n] (grid/row (active-grid state) n))
 (defn column [state n] (grid/col (active-grid state) n))
 (defn command-right-active? [state x] (on? state x grid/side-btns))

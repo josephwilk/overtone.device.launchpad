@@ -8,7 +8,7 @@
 
 (defn- activate-mode [launchpad mode]
   (turn-off-old-active-mode launchpad)
-  (device/led-on launchpad mode)
+  (device/led-on launchpad mode 3 :yellow)
   (swap! (:state launchpad) assoc :active mode)
   (device/render-grid launchpad (mode @(:state launchpad))))
 
