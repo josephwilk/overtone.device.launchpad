@@ -125,7 +125,7 @@
                                        :intensity brightness})))))
 
 (defn led-on
-  ([launchpad id] (led-on launchpad id full-brightness :red))
+  ([launchpad id] (led-on launchpad id full-brightness :yellow))
   ([launchpad id brightness color]
       (let [rcvr (-> launchpad :rcv)]
         (led-on* rcvr id brightness color))))
@@ -134,6 +134,9 @@
   (if-not (= 0 cell)
     (led-on launchpad id)
     (led-off launchpad id)))
+
+(defn command-right-leds-all-off [lp]
+  (doseq [row (range 0 8)] (led-off lp [row 8])))
 
 (defn render-grid [launchpad grid]
   (doseq [[x row] (map vector (iterate inc 0) grid)
@@ -176,6 +179,7 @@
   (let [state (:state launchpad)]
     (fn [{:keys [data2-f]}]
       (state-maps/toggle-side! state (side->row name))
+      (toggle-led launchpad name (state-maps/cell state (side->row name) 8))
       (when-let [trigger-fn (state-maps/trigger-fn state name)]
         (if (= 0 (arg-count trigger-fn))
           (trigger-fn)
@@ -251,8 +255,12 @@
   [rcvs stateful-devs]
   (doseq [rcv rcvs]
     (intromation rcv)
-    (led-on* rcv :up 1 :yellow))
+    (led-on* rcv :up 3 :yellow))
   (doall
    (map (fn [[stateful-dev rcv id]]
           (register-event-handlers-for-launchpad stateful-dev rcv id))
         (map vector stateful-devs rcvs (range)))))
+
+(comment
+  (require '[launchpad.core :as core])
+  (command-right-leds-all-off (first core/launchpad-kons)))

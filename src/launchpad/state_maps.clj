@@ -10,6 +10,11 @@
     (swap! state assoc (mode state) new-grid)
     state))
 
+(defn col-off [state col]
+  (let [grid (active-grid state)]
+    (doseq [row (range 0 8)]
+      (swap! state assoc (mode state) (grid/set grid row col 0)))))
+
 (defn trigger-fn
   ([state x y]  (trigger-fn state (str x "x" y)))
   ([state name] (get-in @grid/fn-grid [(mode state) (keyword name)])))
@@ -23,6 +28,7 @@
 
 (defn row [state n] (grid/row (active-grid state) n))
 (defn column [state n] (grid/col (active-grid state) n))
+
 (defn command-right-active? [state x] (on? state x grid/side-btns))
 
 (defn empty []

@@ -25,6 +25,11 @@
         new-grid (assoc (vec grid) x new-row)]
     new-grid))
 
+(defn set [grid x y value]
+  (let [old-row (-> grid (nth x) (vec))
+        new-row (assoc old-row y value)]
+    (assoc (vec grid) x new-row)))
+
 (defn cell [grid x y] (-> grid (nth x) (nth y)))
 
 (defn on? [grid x y] (not= 0 (cell grid x y)))
