@@ -48,6 +48,7 @@ https://github.com/josephwilk/overtone.device.launchpad/issues?labels=enhancemen
 
 ## Demos
 
+* http://youtu.be/j9eq9KKof9k
 * http://www.youtube.com/watch?v=xTf2pTbjU-Y
 
 ## Launchpad documentation
