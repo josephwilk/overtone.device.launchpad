@@ -16,10 +16,10 @@ Support for interacting with intelligent machines. One day.
 
 The default (setup by launchpad.core):
 
-* left, right, up and down
+* All top control buttons except user1/2
   * Enter mode where each grid remembers keys pressed.
   * Grid buttons simply toggle state/light on/off.
-* user1, user1:
+* user1 & user2:
   * Enter mode where there is no persistent grid state.
   * Grid buttons trigger led/fn key-down and off with key-up
 
