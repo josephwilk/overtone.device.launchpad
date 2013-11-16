@@ -31,7 +31,6 @@
 (defn- start-synths [samples patterns num-steps beat-cnt-bus beat-trg-bus out-bus]
   (doall (mapcat (fn [sample pattern out-bus]
                    (map (fn [step-idx]
-                          (println (to-sc-id sample))
                           (mono-sequencer :buf (to-sc-id sample)
                                           :beat-num step-idx
                                           :pattern (:pattern-buf pattern)
