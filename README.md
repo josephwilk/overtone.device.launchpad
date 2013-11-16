@@ -20,7 +20,7 @@ https://clojars.org/launchpad
 
 ## Usage
 
-launchpad.core sets up some useful defaults to make your device useful:
+While you can change and do whatever you want `launchpad.core` setups some useful defaults:
 
 * All top control buttons except user1/2
   * Enter mode where each grid remembers keys pressed.
@@ -29,7 +29,18 @@ launchpad.core sets up some useful defaults to make your device useful:
   * Enter mode where there is no persistent grid state.
   * Grid buttons trigger led/fn key-down and off with key-up
 
-Some examples of how you can use the grid to bind interesting things:
+### Raw
+
+```clojure
+(use 'overtone.live)
+(use 'overtone.inst.drum)
+(use 'launchpad.core)
+
+(bind :up   :0x0 #(kick))
+(bind :down :0x0 #(hat3))
+```
+
+### Complex Examples
 
 Binding demos: https://github.com/josephwilk/overtone.device.launchpad/blob/master/docs/demo.clj
 
@@ -40,13 +51,7 @@ lein repl
 (load-file "docs/demo.clj")
 ```
 
-## Todos
-
-So many things to do. Contribute, ideas and code.
-
-https://github.com/josephwilk/overtone.device.launchpad/issues?labels=enhancement&page=1&state=open
-
-## Demos
+## Video Demos
 
 * http://youtu.be/j9eq9KKof9k
 * http://www.youtube.com/watch?v=xTf2pTbjU-Y
