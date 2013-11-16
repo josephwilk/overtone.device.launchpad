@@ -138,10 +138,16 @@
 (defn command-right-leds-all-off [lp]
   (doseq [row (range 0 8)] (led-off lp [row 8])))
 
-(defn render-grid [launchpad grid]
-  (doseq [[x row] (map vector (iterate inc 0) grid)
-          [y cell] (map vector (iterate inc 0) row)]
-    (toggle-led launchpad [x y] cell)))
+(defn render-row [launchpad row]
+  (let [grid (state-maps/active-grid (:state launchpad))]
+    (doseq [y (range 0 8)]
+      (toggle-led launchpad [row y] (grid/cell grid row y)))))
+
+(defn render-grid [launchpad]
+  (let [grid (state-maps/active-grid (:state launchpad))]
+    (doseq [[x row] (map vector (iterate inc 0) grid)
+            [y cell] (map vector (iterate inc 0) row)]
+      (toggle-led launchpad [x y] cell))))
 
 (defn reset-launchpad [rcvr] (midi-control rcvr 0 0))
 

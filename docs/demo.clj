@@ -35,28 +35,16 @@
   (def harp-s (sample (freesound-path 27130)))
   (bind :left :0x0 (fn [lp] (def h (harp-s :loop? true :amp 0.3)))))
 
-;;Use LED row sequences to indicate when beats strike (uses samples + supercollider counter)
+;;Use LED row sequences to indicate when beats strike
 (do
-  (require '[launchpad.grid :as grid])
   (require '[launchpad.state-maps :as state-maps])
   (require '[launchpad.device :as device])
   (require '[launchpad.core :as c])
   (require '[overtone.synth.timing :as timing])
   (use '[overtone.helpers.lib :only [uuid]])
-
   (use 'launchpad.sequencer)
 
   (defonce count-trig-id (trig-id))
-
-  (def kick-s     (sample (freesound-path 777)))
-  (def click-s    (sample (freesound-path 406)))
-  (def boom-s     (sample (freesound-path 33637)))
-  (def subby-s    (sample (freesound-path 25649)))
-  (def choir-s    (sample (freesound-path 172323)))
-  (def godzilla-s (sample (freesound-path 206078)))
-  (def snow-running-s (sample (freesound-path 160605)))
-
-  (def all-samples [kick-s click-s boom-s subby-s choir-s godzilla-s snow-running-s])
 
   (defonce root-trg-bus (control-bus)) ;; global metronome pulse
   (defonce root-cnt-bus (control-bus)) ;; global metronome count
@@ -74,9 +62,16 @@
   ;;Sending out beat event
   (defsynth get-beat [] (send-trig (in:kr beat-trg-bus) count-trig-id (+ (in:kr beat-cnt-bus) 1)))
 
-  (def lp-sequencer (mk-sequencer "launchpad-sequencer" all-samples 8 beat-cnt-bus beat-trg-bus 0))
+  (def kick-s     (sample (freesound-path 777)))
+  (def click-s    (sample (freesound-path 406)))
+  (def boom-s     (sample (freesound-path 33637)))
+  (def subby-s    (sample (freesound-path 25649)))
+  (def choir-s    (sample (freesound-path 172323)))
+  (def godzilla-s (sample (freesound-path 206078)))
+  (def snow-running-s (sample (freesound-path 160605)))
+  (def all-samples [kick-s click-s boom-s subby-s choir-s godzilla-s snow-running-s])
 
-  lp-sequencer
+  (def lp-sequencer (mk-sequencer "launchpad-sequencer" all-samples 8 beat-cnt-bus beat-trg-bus 0))
 
   (def refresh-beat-key (uuid))
   (def beat-rep-key (uuid))
@@ -91,6 +86,7 @@
         (device/led-on  lp [7 7] brightness :yellow)))
     beat-rep-key)
 
+  ;; Think of this as the event loop for the grid, triggered on a beat
   (on-trigger count-trig-id
     (fn [beat]
       (let [current-row (mod (dec beat) 8)
@@ -98,6 +94,13 @@
             lp (first c/launchpad-kons)
             col (state-maps/column (:state lp) current-row)
             last-col (state-maps/column (:state lp) last-row)]
+
+        ;;Refresh new patterns just before beat 0
+        ;;Ensures new patterns start on beat
+        (when (= current-row 7.0)
+          (doseq [idx (range 6)]
+            (when (state-maps/command-right-active? (:state lp) idx)
+              (sequencer-write! lp-sequencer idx (state-maps/grid-row (:state lp) idx)))))
 
         (doseq [r (range 0 8)]
           (when (state-maps/command-right-active? (:state lp) r)
@@ -110,17 +113,18 @@
               (device/led-on lp  [r current-row] 1 :yellow))))))
     refresh-beat-key)
 
-  (defn fire-buffer-sequence [lp idx]
-    (println :fire)
-    (sequencer-write! lp-sequencer idx (state-maps/grid-row (:state lp) idx)))
+  (defn toggle-row [lp idx]
+    (when-not (state-maps/command-right-active? (:state lp) idx)
+      (reset-pattern! lp-sequencer idx)
+      (device/render-row lp idx)))
 
-  (bind :up :vol   (fn [lp] (fire-buffer-sequence lp 0)))
-  (bind :up :pan   (fn [lp] (fire-buffer-sequence lp 1)))
-  (bind :up :snda  (fn [lp] (fire-buffer-sequence lp 2)))
-  (bind :up :sndb  (fn [lp] (fire-buffer-sequence lp 3)))
-  (bind :up :stop  (fn [lp] (fire-buffer-sequence lp 4)))
-  (bind :up :trkon (fn [lp] (fire-buffer-sequence lp 5)))
-  (bind :up :solo  (fn [lp] (fire-buffer-sequence lp 6)))
+  (bind :up :vol   (fn [lp] (toggle-row lp 0)))
+  (bind :up :pan   (fn [lp] (toggle-row lp 1)))
+  (bind :up :snda  (fn [lp] (toggle-row lp 2)))
+  (bind :up :sndb  (fn [lp] (toggle-row lp 3)))
+  (bind :up :stop  (fn [lp] (toggle-row lp 4)))
+  (bind :up :trkon (fn [lp] (toggle-row lp 5)))
+  (bind :up :solo  (fn [lp] (toggle-row lp 6)))
 
   ;;Adjust bpm
   (bind :up :7x6 (fn [] (ctl b-trg :div (swap! current-beat inc))))
@@ -131,12 +135,9 @@
                     (reset-all-patterns! lp-sequencer)
                     (state-maps/column-off (:state lp) 8)
                     (device/command-right-leds-all-off lp)
-                    (device/render-grid lp (state-maps/active-grid (:state lp))))))
+                    (device/render-grid lp))))
 
-(use 'launchpad.sequencer :reload)
-(sequencer-patterns lp-sequencer)
-
-;;Use LED row sequences to indicate when beats should strike
+;;Use LED row sequences to indicate when beats should strike (without forced beat sync)
 (do
   (require '[launchpad.grid :as grid])
   (require '[launchpad.state-maps :as state-maps])
