@@ -84,6 +84,8 @@
                                   :arm     {:note 120 :fn midi-note-on}}
                        :grid {:fn midi-note-on}}}})
 
+(def modes (-> launchpad-config :interfaces :grid-controls :controls keys))
+
 (defn side->row [name] (-> launchpad-config :interfaces :grid-controls :side-controls name :row))
 
 (defn velocity [{color :color intensity :intensity}]
