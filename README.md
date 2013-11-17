@@ -4,7 +4,7 @@
 
 A framework for interacting a Launchpad with Overtone through Clojure.
 
-![Launchpad S](http://s10.postimg.org/mj3szi1i1/launchpad_s.jpg)
+![Launchpad S](http://s24.postimg.org/tn4w9d7j5/687474703a2f2f7331302e706f7374696d672e6f72672f6d.jpg)
 
 ## Clojars
 
