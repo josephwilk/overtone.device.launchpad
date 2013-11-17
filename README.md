@@ -55,6 +55,7 @@ lein repl
 
 ## Video Demos
 
+* http://youtu.be/tUBsM3FEkmQ
 * http://youtu.be/j9eq9KKof9k
 * http://www.youtube.com/watch?v=xTf2pTbjU-Y
 
