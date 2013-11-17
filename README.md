@@ -36,6 +36,8 @@ While you can change and do whatever you want `launchpad.core` setups some usefu
 (use 'overtone.inst.drum)
 (use 'launchpad.core)
 
+(boot!)
+
 (bind :up   :0x0 #(kick))
 (bind :down :0x0 #(hat3))
 ```
