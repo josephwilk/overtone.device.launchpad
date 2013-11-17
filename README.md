@@ -44,7 +44,11 @@ While you can change and do whatever you want `launchpad.core` setups some usefu
 
 ### Complex Examples
 
-Binding demos: https://github.com/josephwilk/overtone.device.launchpad/blob/master/docs/demo.clj
+* Expressing drum/sample positions using LEDS (automatically synching to the beat). 
+* Adding a metronome cell which flashes with beat
+* Mapping sample to a row, each button forces a jump to a timepoint (like MLR)
+
+Code: https://github.com/josephwilk/overtone.device.launchpad/blob/master/docs/demo.clj
 
 If you want to try from the repl
 
@@ -56,8 +60,6 @@ lein repl
 ## Video Demos
 
 * http://youtu.be/tUBsM3FEkmQ
-* http://youtu.be/j9eq9KKof9k
-* http://www.youtube.com/watch?v=xTf2pTbjU-Y
 
 ## Launchpad documentation
 
