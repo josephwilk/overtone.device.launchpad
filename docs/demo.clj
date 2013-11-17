@@ -1,6 +1,6 @@
 (do
   (use '[launchpad.core] :reload)
-  (use 'overtone.live)
+  (use 'overtone.live :reload)
   (boot!))
 
 ;;Drum kit
@@ -29,11 +29,39 @@
   (bind :user1 :3x2 #(haziti-clap))
   (bind :user1 :4x2 #(bing)))
 
-;;Trigger samples
-
+;;For a single sample map it to a row where each button
+;;forces playback of the sample to a specific timepoint
 (do
   (def harp-s (sample (freesound-path 27130)))
-  (bind :left :0x0 (fn [lp] (def h (harp-s :loop? true :amp 0.3)))))
+
+  (defsynth skipping-sequencer
+    "Supports looping and jumping position"
+    [buf 0 rate 1 out-bus 0 start-point 0 bar-trg 0 loop? 0 vol 1.0]
+    (out out-bus (* vol (scaled-play-buf 1 buf rate bar-trg start-point loop?))))
+
+(def harp (skipping-sequencer :buf (to-sc-id harp-s)
+                              :loop? true
+                              :out-bus 0))
+
+(defn start-at [player time]
+  (ctl player :start-point time)
+  (ctl player :bar-trg 0)
+  (Thread/sleep 100)
+  (ctl player :bar-trg 1))
+
+(bind :left :0x0 (fn [lp] (start-at harp 0)))
+(bind :left :0x1 (fn [lp] (start-at harp 2000)))
+(bind :left :0x2 (fn [lp] (start-at harp 4000)))
+(bind :left :0x3 (fn [lp] (start-at harp 6000)))
+(bind :left :0x4 (fn [lp] (start-at harp 8000)))
+(bind :left :0x5 (fn [lp] (start-at harp 10000)))
+(bind :left :0x6 (fn [lp] (start-at harp 12000)))
+(bind :left :0x7 (fn [lp] (start-at harp 14000)))
+(bind :left :vol (fn [lp] (start-at harp 16000)))
+
+;(kill x)
+;(stop)
+)
 
 ;;Use LED row sequences to indicate when beats strike
 (do
@@ -69,6 +97,7 @@
   (def choir-s    (sample (freesound-path 172323)))
   (def godzilla-s (sample (freesound-path 206078)))
   (def snow-running-s (sample (freesound-path 160605)))
+  2086
   (def all-samples [kick-s click-s boom-s subby-s choir-s godzilla-s snow-running-s])
 
   (def lp-sequencer (mk-sequencer "launchpad-sequencer" all-samples 8 beat-cnt-bus beat-trg-bus 0))
