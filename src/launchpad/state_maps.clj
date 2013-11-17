@@ -19,6 +19,9 @@
 
 (defn grid-row [state n] (grid/grid-row (active-grid state) n))
 
+(defn set [state x y value]
+  (swap! state assoc (mode state) (grid/set (active-grid state) x y value)))
+
 (defn cell [state x y] (grid/cell (active-grid state) x y))
 
 (defn row [state n] (grid/row (active-grid state) n))
