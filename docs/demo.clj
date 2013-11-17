@@ -33,31 +33,32 @@
 ;;forces playback of the sample to a specific timepoint
 (do
   (def harp-s (sample (freesound-path 27130)))
+  (def harp-duration (* 46.8  (* 1000 (:duration harp-s))))
 
   (defsynth skipping-sequencer
     "Supports looping and jumping position"
-    [buf 0 rate 1 out-bus 0 start-point 0 bar-trg 0 loop? 0 vol 1.0]
+    [buf 0 rate 1 out-bus 0 start-point 0 bar-trg [0 :tr] loop? 0 vol 1.0]
     (out out-bus (* vol (scaled-play-buf 1 buf rate bar-trg start-point loop?))))
 
-(def harp (skipping-sequencer :buf (to-sc-id harp-s)
-                              :loop? true
-                              :out-bus 0))
+  (def harp (skipping-sequencer :buf (to-sc-id harp-s)
+                                 :loop? false
+                                 :bar-trg 0
+                                 :out-bus 0))
+
 
 (defn start-at [player time]
   (ctl player :start-point time)
-  (ctl player :bar-trg 0)
-  (Thread/sleep 100)
   (ctl player :bar-trg 1))
 
-(bind :left :0x0 (fn [lp] (start-at harp 0)))
-(bind :left :0x1 (fn [lp] (start-at harp 2000)))
-(bind :left :0x2 (fn [lp] (start-at harp 4000)))
-(bind :left :0x3 (fn [lp] (start-at harp 6000)))
-(bind :left :0x4 (fn [lp] (start-at harp 8000)))
-(bind :left :0x5 (fn [lp] (start-at harp 10000)))
-(bind :left :0x6 (fn [lp] (start-at harp 12000)))
-(bind :left :0x7 (fn [lp] (start-at harp 14000)))
-(bind :left :vol (fn [lp] (start-at harp 16000)))
+(bind :left :0x0 (fn [lp] (start-at harp (* 0 (/ harp-duration 8)))))
+(bind :left :0x1 (fn [lp] (start-at harp (* 1 (/ harp-duration 8)))))
+(bind :left :0x2 (fn [lp] (start-at harp (* 2 (/ harp-duration 8)))))
+(bind :left :0x3 (fn [lp] (start-at harp (* 3 (/ harp-duration 8)))))
+(bind :left :0x4 (fn [lp] (start-at harp (* 4 (/ harp-duration 8)))))
+(bind :left :0x5 (fn [lp] (start-at harp (* 5 (/ harp-duration 8)))))
+(bind :left :0x6 (fn [lp] (start-at harp (* 6 (/ harp-duration 8)))))
+(bind :left :0x7 (fn [lp] (start-at harp (* 7 (/ harp-duration 8)))))
+(bind :left :vol (fn [lp] (start-at harp (* 8 (/ harp-duration 8)))))
 
 ;(kill x)
 ;(stop)
