@@ -55,7 +55,7 @@ lein repl
 
 ## See Overtone and Launchpad in actions:
 
-* http://youtu.be/tUBsM3FEkmQ
+* http://youtu.be/BFZ0vo4QUA0
 
 ## Launchpad internal documentation
 
