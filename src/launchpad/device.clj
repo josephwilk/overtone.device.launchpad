@@ -8,7 +8,7 @@
    [launchpad.state-maps :as state-maps]
    [launchpad.grid :as grid]))
 
-(defrecord Launchpad [rcv dev interfaces])
+(defrecord Launchpad [rcv dev interfaces state])
 
 (def note-on  0x80)
 (def note-off 0x90)
@@ -88,7 +88,7 @@
 
 (defn side->row [name] (-> launchpad-config :interfaces :grid-controls :side-controls name :row))
 
-(defn velocity [{color :color intensity :intensity}]
+(defn- velocity [{color :color intensity :intensity}]
   (if (some #{color} led-colors)
     (let [intensity (if (> intensity 3) 3 intensity)
           green (case color
@@ -173,6 +173,83 @@
     (Thread/sleep 50))
   (reset-launchpad rcvr))
 
+(defn- side-event-handler [launchpad name state]
+  (fn [{:keys [data2-f]}]
+    (state-maps/toggle-side! state (side->row name))
+    (toggle-led launchpad name (state-maps/cell state (side->row name) 8))
+    (when-let [trigger-fn (state-maps/trigger-fn state name)]
+      (if (= 0 (arg-count trigger-fn))
+        (trigger-fn)
+        (trigger-fn launchpad)))))
+
+(defn- bind-grid-events [launchpad device-key idx state]
+  (doseq [[x row] (map vector (iterate inc 0) (grid/project-8x8 grid-notes))
+          [y note] (map vector (iterate inc 0) row)]
+    (let [type      :note-on
+          note      note
+          on-handle (concat device-key [type note])
+          on-fn (fn [_]
+                  (state-maps/toggle! state x y)
+                  (toggle-led launchpad [x y] (state-maps/cell state x y))
+                  (when-let [trigger-fn (state-maps/trigger-fn state x y)]
+                    (if (= 0 (arg-count trigger-fn))
+                      (trigger-fn)
+                      (trigger-fn launchpad)))
+                  (let [active-mode (state-maps/mode state)]
+                    (event [:Launchpad :grid-on idx active-mode]
+                           :id [x y]
+                           :note note
+                           :launchpad launchpad
+                           :idx idx)))
+          off-handle (concat device-key [:note-off note])
+          off-fn (fn [_]
+                   (event [:Launchpad :grid-off idx (state-maps/mode state)]
+                          :id [x y]
+                          :note note
+                          :launchpad launchpad
+                          :idx idx))]
+
+      (println :handle on-handle)
+      (println :handle off-handle)
+
+      (on-event on-handle  on-fn  (str "grid-on-event-for" on-handle))
+      (on-event off-handle off-fn (str "grid-off-event-for" off-handle)))))
+
+(defn- bind-side-events [launchpad device-key interfaces state]
+  (doseq [[k v] (-> interfaces :grid-controls :side-controls)]
+    (let [type      (:type v)
+          note      (:note v)
+          row       (:row v)
+          on-handle (concat device-key [type note])
+          on-fn (side-event-handler launchpad k state)]
+      (println :handle on-handle)
+      (on-event on-handle on-fn (str "side-on-event-for" on-handle)))))
+
+(defn- bind-control-events [launchpad device-key idx interfaces]
+   (doseq [[k v] (-> interfaces :grid-controls :controls)]
+      (let [type      (:type v)
+            note      (:note v)
+            on-handle    (concat device-key [type note])
+            on-fn (fn [{:keys [data2-f]}]
+                    (event [:Launchpad :control idx k]
+                           :val data2-f
+                           :id k
+                           :launchpad launchpad
+                           :idx idx))]
+        (println :handle on-handle)
+        (on-event on-handle on-fn (str "top-on-event-for" on-handle)))))
+
+(defn- register-event-handlers-for-launchpad
+  [device rcv idx]
+  (let [launchpad  (map->Launchpad (assoc device :rcv rcv))
+        interfaces (:interfaces device)
+        device-key (midi-full-device-key (:dev device))
+        state      (:state device)]
+    (bind-grid-events    launchpad device-key state)
+    (bind-side-events    launchpad device-key interfaces state)
+    (bind-control-events launchpad device-key idx interfaces)
+    launchpad))
+
 (defn stateful-launchpad
   [device]
   (let [interfaces (-> launchpad-config :interfaces)
@@ -182,82 +259,6 @@
      :interfaces interfaces
      :state      state
      :type       ::stateful-launchpad}))
-
-(defn- side-event-handler [launchpad name]
-  (let [state (:state launchpad)]
-    (fn [{:keys [data2-f]}]
-      (state-maps/toggle-side! state (side->row name))
-      (toggle-led launchpad name (state-maps/cell state (side->row name) 8))
-      (when-let [trigger-fn (state-maps/trigger-fn state name)]
-        (if (= 0 (arg-count trigger-fn))
-          (trigger-fn)
-          (trigger-fn launchpad))))))
-
-(defn- register-event-handlers-for-launchpad
-  [device rcv idx]
-  (let [launchpad  (map->Launchpad (assoc device :rcv rcv))
-        interfaces (:interfaces device)
-        device-key (midi-full-device-key (:dev device))
-        device-num (midi-device-num      (:dev device))
-        state      (:state device)]
-
-    ;;Grid events
-    (doseq [[x row] (map vector (iterate inc 0) (grid/project-8x8 grid-notes))
-            [y note] (map vector (iterate inc 0) row)]
-      (let [type      :note-on
-            note      note
-            handle    (concat device-key [type note])
-            update-fn (fn [_]
-                        (state-maps/toggle! state x y)
-                        (toggle-led launchpad [x y] (state-maps/cell state x y))
-                        (when-let [trigger-fn (state-maps/trigger-fn state x y)]
-                          (if (= 0 (arg-count trigger-fn))
-                            (trigger-fn)
-                            (trigger-fn launchpad)))
-                        (let [active-mode (state-maps/mode state)]
-                          (event [:Launchpad :grid-on idx active-mode]
-                                 :id [x y]
-                                 :note note
-                                 :launchpad launchpad
-                                 :idx idx)))
-            handle-off  (concat device-key [:note-off note])
-            off-fn (fn [_]
-                     (event [:Launchpad :grid-off idx (state-maps/mode state)]
-                            :id [x y]
-                            :note note
-                            :launchpad launchpad
-                            :idx idx))]
-
-        (println :handle handle)
-        (println :handle handle-off)
-
-        (on-event handle     update-fn (str "update-state-for" handle))
-        (on-event handle-off off-fn    (str "update-off-for" handle-off))))
-
-    ;;Side events
-    (doseq [[k v] (-> launchpad-config :interfaces :grid-controls :side-controls)]
-      (let [type      (:type v)
-            note      (:note v)
-            row       (:row v)
-            handle    (concat device-key [type note])
-            update-fn (side-event-handler launchpad k)]
-        (println :handle handle)
-        (on-event handle update-fn (str "update-state-for" handle))))
-
-    ;;Control events
-    (doseq [[k v] (-> launchpad-config :interfaces :grid-controls :controls)]
-      (let [type      (:type v)
-            note      (:note v)
-            handle    (concat device-key [type note])
-            update-fn (fn [{:keys [data2-f]}]
-                        (event [:Launchpad :control idx k]
-                               :val data2-f
-                               :id k
-                               :launchpad launchpad
-                               :idx idx))]
-        (println :handle handle)
-        (on-event handle update-fn (str "update-state-for" handle))))
-    launchpad))
 
 (defn merge-launchpad-kons
   [rcvs stateful-devs]
