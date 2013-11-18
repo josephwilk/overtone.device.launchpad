@@ -245,7 +245,7 @@
         interfaces (:interfaces device)
         device-key (midi-full-device-key (:dev device))
         state      (:state device)]
-    (bind-grid-events    launchpad device-key state)
+    (bind-grid-events    launchpad device-key idx state)
     (bind-side-events    launchpad device-key interfaces state)
     (bind-control-events launchpad device-key idx interfaces)
     launchpad))
