@@ -231,6 +231,12 @@
             note      (:note v)
             on-handle    (concat device-key [type note])
             on-fn (fn [{:keys [data2-f]}]
+                    (event [:Launchpad :control k]
+                           :val data2-f
+                           :id k
+                           :launchpad launchpad
+                           :idx idx)
+
                     (event [:Launchpad :control idx k]
                            :val data2-f
                            :id k
