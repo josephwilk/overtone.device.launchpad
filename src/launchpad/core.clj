@@ -13,9 +13,10 @@
 (defn bind
   "For a specific mode bind a grid cell key press to a function.
    If function takes an argument it will be passed a stateful launchpad device."
-  [mode cell fun]
-  (assert (some #{mode} device/modes))
-  (swap! g/fn-grid assoc-in [mode cell] fun))
+  ([mode cell fun] (bind (first launchpad-kons) mode cell fun))
+  ([lp mode cell fun]
+     (assert (some #{mode} device/modes))
+     (swap! (:fn-map lp) assoc-in [mode cell] fun)))
 
 (defn boot!
   "Setup event bindings for launchpad devices."
