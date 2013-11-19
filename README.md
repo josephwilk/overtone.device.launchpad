@@ -37,7 +37,7 @@ useful defaults:
 (bind :down :0x0 #(hat3))
 ```
 
-### Plugins (Much more interesting stuff)
+### Advanced Examples
 
 * Expressing drum/sample positions using LEDS (automatically synching to the beat). 
 * Adding a metronome cell which flashes with beat
