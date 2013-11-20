@@ -10,14 +10,6 @@
    [launchpad.device     :as device]
    [launchpad.grid       :as g]))
 
-(defn bind
-  "For a specific mode bind a grid cell key press to a function.
-   If function takes an argument it will be passed a stateful launchpad device."
-  ([mode cell fun] (bind (first launchpad-kons) mode cell fun))
-  ([lp mode cell fun]
-     (assert (some #{mode} device/modes))
-     (swap! (:fn-map lp) assoc-in [mode cell] fun)))
-
 (defn boot!
   "Setup event bindings for launchpad devices."
   []
@@ -25,6 +17,14 @@
   (defonce launchpad-connected-devices   (midi/midi-find-connected-devices "Launchpad"))
   (defonce launchpad-stateful-devices    (map device/stateful-launchpad launchpad-connected-devices))
   (defonce launchpad-kons                (device/merge-launchpad-kons launchpad-connected-receivers launchpad-stateful-devices))
+
+  (defn bind
+    "For a specific mode bind a grid cell key press to a function.
+     If function takes an argument it will be passed a stateful launchpad device."
+    ([mode cell fun] (bind (first launchpad-kons) mode cell fun))
+    ([lp mode cell fun]
+       (assert (some #{mode} device/modes))
+       (swap! (-> lp :state :grid-fn) assoc-in [mode cell] fun)))
 
   (e/on-event [:Launchpad :control :up]
               (fn [m] (mode/trigger (:launchpad m) :up))
