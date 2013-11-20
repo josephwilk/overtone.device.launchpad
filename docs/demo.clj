@@ -33,7 +33,7 @@
 ;;forces playback of the sample to a specific timepoint
 (do
   (def harp-s (sample (freesound-path 27130)))
-  (def harp-duration (* 46.8  (* 1000 (:duration harp-s))))
+  (def harp-duration (* 46.8 (* 1000 (:duration harp-s))))
 
   (defsynth skipping-sequencer
     "Supports looping and jumping position"
@@ -41,10 +41,10 @@
     (out out-bus (* vol (scaled-play-buf 1 buf rate bar-trg start-point loop?))))
 
   (def harp (skipping-sequencer :buf (to-sc-id harp-s)
-                                 :loop? false
-                                 :bar-trg 0
-                                 :out-bus 0))
-
+                                :loop? false
+                                :bar-trg 0
+                                :out-bus 0
+                                :vol 0))
 
 (defn start-at [player time]
   (ctl player :start-point time)
@@ -58,7 +58,14 @@
 (bind :left :0x5 (fn [lp] (start-at harp (* 5 (/ harp-duration 8)))))
 (bind :left :0x6 (fn [lp] (start-at harp (* 6 (/ harp-duration 8)))))
 (bind :left :0x7 (fn [lp] (start-at harp (* 7 (/ harp-duration 8)))))
-(bind :left :vol (fn [lp] (start-at harp (* 8 (/ harp-duration 8)))))
+
+(bind :left :vol (fn [lp]
+                   (if (state-maps/command-right-active? (:state lp) :vol)
+                     (do
+                       (ctl harp :vol 0)
+                       (ctl harp :bar-trig 0))
+                     (do (ctl harp :bar-trig 1)
+                         (ctl harp :vol 1)))))
 
 ;(kill x)
 ;(stop)
