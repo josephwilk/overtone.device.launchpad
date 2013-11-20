@@ -32,8 +32,13 @@
 ;;For a single sample map it to a row where each button
 ;;forces playback of the sample to a specific timepoint
 (do
+  (require '[launchpad.device :as device] :reload)
+  (require '[launchpad.state-maps :as state-maps] :reload)
+
+  (def lp (first launchpad-kons))
+
   (def harp-s (sample (freesound-path 27130)))
-  (def harp-duration (* 46.8 (* 1000 (:duration harp-s))))
+  (def harp-duration (:duration harp-s))
 
   (defsynth skipping-sequencer
     "Supports looping and jumping position"
@@ -46,29 +51,74 @@
                                 :out-bus 0
                                 :vol 0))
 
-(defn start-at [player time]
-  (ctl player :start-point time)
-  (ctl player :bar-trg 1))
+  (def start-timestamp (atom nil))
+  (def row-playtime (atom 0))
 
-(bind :left :0x0 (fn [lp] (start-at harp (* 0 (/ harp-duration 8)))))
-(bind :left :0x1 (fn [lp] (start-at harp (* 1 (/ harp-duration 8)))))
-(bind :left :0x2 (fn [lp] (start-at harp (* 2 (/ harp-duration 8)))))
-(bind :left :0x3 (fn [lp] (start-at harp (* 3 (/ harp-duration 8)))))
-(bind :left :0x4 (fn [lp] (start-at harp (* 4 (/ harp-duration 8)))))
-(bind :left :0x5 (fn [lp] (start-at harp (* 5 (/ harp-duration 8)))))
-(bind :left :0x6 (fn [lp] (start-at harp (* 6 (/ harp-duration 8)))))
-(bind :left :0x7 (fn [lp] (start-at harp (* 7 (/ harp-duration 8)))))
+  (defn start-at [player time]
+    ;;(reset! row-playtime (int time))
+    (ctl player :start-point time)
+    (ctl player :bar-trg 1))
 
-(bind :left :vol (fn [lp]
-                   (if (state-maps/command-right-active? (:state lp) :vol)
-                     (do
-                       (ctl harp :vol 0)
-                       (ctl harp :bar-trig 0))
-                     (do (ctl harp :bar-trig 1)
-                         (ctl harp :vol 1)))))
+  (defn row-from-playtime [playtime]
+    (println :playtime playtime)
+    (if (= (int playtime) 0)
+      0
+      (int (/ playtime (/ harp-duration 8)))))
 
-;(kill x)
-;(stop)
+  (defn start-point-for [row] (* row (/ harp-duration 8)))
+
+  (defn play-position []
+    (let [elasped (int (- (now) @start-timestamp))]
+      (println :time elasped)
+      (if (= 0 elasped)
+        0
+        (mod (/ (/ elasped 1000) (/ harp-duration 8))  harp-duration))))
+
+  (add-watch row-playtime :key (fn [k r os ns]
+                                 (println :bing os ns)
+                                 (let [old-cell (row-from-playtime os)
+                                       new-cell (row-from-playtime ns)]
+                                   (when (state-maps/on? (:state lp) 0 old-cell )
+                                     (state-maps/set (:state lp) 0 old-cell 0)
+                                     (device/led-off lp [0 old-cell]))
+                                   (when-not (state-maps/on? (:state lp) 0 new-cell)
+                                     (state-maps/set (:state lp) 0 new-cell 1)
+                                     (device/led-on lp [0 new-cell])))))
+
+  (comment
+    (remove-watch row-playtime :key))
+
+  (bind :left :0x0 (fn [lp] (start-at harp (start-point-for 0))))
+  (bind :left :0x1 (fn [lp] (start-at harp (start-point-for 1))))
+  (bind :left :0x2 (fn [lp] (start-at harp (start-point-for 2))))
+  (bind :left :0x3 (fn [lp] (start-at harp (start-point-for 3))))
+  (bind :left :0x4 (fn [lp] (start-at harp (start-point-for 4))))
+  (bind :left :0x5 (fn [lp] (start-at harp (start-point-for 5))))
+  (bind :left :0x6 (fn [lp] (start-at harp (start-point-for 6) )))
+  (bind :left :0x7 (fn [lp] (start-at harp (start-point-for 7))))
+
+  (bind :left :vol (fn [lp]
+                     (if (state-maps/command-right-active? (:state lp) 0)
+                       (do
+                         (ctl harp :start-time 0)
+                         (ctl harp :bar-trig 1)
+                         (ctl harp :vol 1)
+                         (reset! row-playtime 0)
+                         (reset! start-timestamp (now)))
+                       (do
+                         (ctl harp :vol 0)
+                         (ctl harp :bar-trig 0)))))
+
+  ;;(kill x)
+  ;;(stop)
+
+  (defn playtime-loop [v]
+    (loop []
+      (reset! v (play-position))
+      (Thread/sleep 100)
+      (recur)))
+
+  (def player-agent (agent (playtime-loop row-playtime)))
 )
 
 ;;Use LED row sequences to indicate when beats strike
