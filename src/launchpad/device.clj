@@ -174,7 +174,7 @@
   (reset-launchpad rcvr))
 
 (defn- side-event-handler [launchpad name state]
-  (fn [{:keys [data2-f]}]
+  (fn [_]
     (state-maps/toggle-side! state (side->row name))
     (toggle-led launchpad name (state-maps/cell state (side->row name) 8))
     (when-let [trigger-fn (state-maps/trigger-fn state name)]

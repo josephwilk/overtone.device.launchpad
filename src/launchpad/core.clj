@@ -24,7 +24,7 @@
     ([mode cell fun] (bind (first launchpad-kons) mode cell fun))
     ([lp mode cell fun]
        (assert (some #{mode} device/modes))
-       (swap! (-> lp :state :grid-fn) assoc-in [mode cell] fun)))
+       (swap! (:state lp) assoc-in [:fn-map mode cell] fun)))
 
   (e/on-event [:Launchpad :control :up]
               (fn [m] (mode/trigger (:launchpad m) :up))
@@ -58,17 +58,18 @@
               (fn [m] (mode/trigger (:launchpad m) :session))
               ::session-mode)
 
-  (e/on-event [:Launchpad :grid-off :user1]
-              (fn [{lp :launchpad [x y] :id}]
-                (state-maps/toggle! (:state lp) x y)
-                (device/led-off lp [x y]))
-              ::grid-user-1-off)
+  (let [lp-id 0]
+    (e/on-event [:Launchpad :grid-off lp-id :user1]
+                (fn [{lp :launchpad [x y] :id}]
+                  (state-maps/toggle! (:state lp) x y)
+                  (device/led-off lp [x y]))
+                ::grid-user-1-off)
 
-  (e/on-event [:Launchpad :grid-off :user2]
-              (fn [{lp :launchpad [x y] :id}]
-                (state-maps/toggle! (:state lp) x y)
-                (device/led-off lp [x y]))
-              ::grid-user-2-off)
+    (e/on-event [:Launchpad :grid-off lp-id :user2]
+                (fn [{lp :launchpad [x y] :id}]
+                  (state-maps/toggle! (:state lp) x y)
+                  (device/led-off lp [x y]))
+                ::grid-user-2-off))
 
   (comment
     (boot!)

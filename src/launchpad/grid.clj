@@ -1,6 +1,6 @@
 (ns launchpad.grid)
 
-(defn fn-grid [] (atom {}))
+(defn fn-grid [] {})
 
 (def side-btns 8)
 
