@@ -1,3 +1,6 @@
+;;Demos showing all the wonderful things you can do with launchpad and overtone
+;;This is a space for those ideas to grow and the good ones will be extracted out
+;;and provided as plugins.
 (do
   (use '[launchpad.core] :reload)
   (use 'overtone.live :reload)
@@ -55,29 +58,33 @@
   (def row-playtime (atom 0))
 
   (defn start-at [player time]
-    ;;(reset! row-playtime (int time))
-    (ctl player :start-point time)
-    (ctl player :bar-trg 1))
+    (reset! start-timestamp (- (int time) now))
+    (reset! row-playtime (play-position start-timestamp))
+    (ctl player :start-point time :bar-trg 1))
 
-  (defn row-from-playtime [playtime]
-    (println :playtime playtime)
+  (defn cell-from-playtime
+    "return active cell based on play position in seconds"
+    [play-position]
+    (println :play-pos play-position)
     (if (= (int playtime) 0)
       0
       (int (/ playtime (/ harp-duration 8)))))
 
   (defn start-point-for [row] (* row (/ harp-duration 8)))
 
-  (defn play-position []
-    (let [elasped (int (- (now) @start-timestamp))]
-      (println :time elasped)
-      (if (= 0 elasped)
-        0
-        (mod (/ (/ elasped 1000) (/ harp-duration 8))  harp-duration))))
+  ;;now -> ms
+
+  (defn play-position
+    "return current play position in seconds"
+    [start-time]
+    (let [elasped-ms (int (- (now) @start-time))
+          elapsed-s (/ elapsed 1000)]
+      (mod elapsed-s harp-duration)))
 
   (add-watch row-playtime :key (fn [k r os ns]
                                  (println :bing os ns)
-                                 (let [old-cell (row-from-playtime os)
-                                       new-cell (row-from-playtime ns)]
+                                 (let [old-cell (cell-from-playtime os)
+                                       new-cell (cell-from-playtime ns)]
                                    (when (state-maps/on? (:state lp) 0 old-cell )
                                      (state-maps/set (:state lp) 0 old-cell 0)
                                      (device/led-off lp [0 old-cell]))
@@ -100,26 +107,17 @@
   (bind :left :vol (fn [lp]
                      (if (state-maps/command-right-active? (:state lp) 0)
                        (do
-                         (ctl harp :start-time 0)
-                         (ctl harp :bar-trig 1)
-                         (ctl harp :vol 1)
+                         (ctl harp :start-time 0 :vol 1 :bar-trig 1)
                          (reset! row-playtime 0)
                          (reset! start-timestamp (now)))
-                       (do
-                         (ctl harp :vol 0)
-                         (ctl harp :bar-trig 0)))))
+                       (ctl harp :vol 0 :bar-trig 0))))
 
+  (def event-loop (every 100 #(reset! row-playtime (play-position @start-timestamp))))
+
+  ;;(stop event-loop)
   ;;(kill x)
   ;;(stop)
-
-  (defn playtime-loop [v]
-    (loop []
-      (reset! v (play-position))
-      (Thread/sleep 100)
-      (recur)))
-
-  (def player-agent (agent (playtime-loop row-playtime)))
-)
+  )
 
 ;;Use LED row sequences to indicate when beats strike
 (do
