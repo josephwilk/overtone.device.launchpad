@@ -32,31 +32,32 @@
   (bind :user1 :3x2 #(haziti-clap))
   (bind :user1 :4x2 #(bing)))
 
-;;For a single sample map it to a row where each button
+;;Map each sample to a row where each button
 ;;forces playback of the sample to a specific timepoint
+;; LED tracks current point in sample (No beat syncing yet)
 (do
   (require '[launchpad.device :as device] :reload)
   (require '[launchpad.state-maps :as state-maps] :reload)
+  (require '[overtone.at-at :as at-at])
 
   (def lp (first launchpad-kons))
 
-  (def harp-s (sample (freesound-path 27130)))
-  (def harp-duration (:duration harp-s))
-  (def harp-frames (:size harp-s))
+  (def phat-s (sample (freesound-path 48489)))
+  (def groove-s (sample (freesound-path 48488)))
 
   (defsynth skipping-sequencer
     "Supports looping and jumping position"
     [buf 0 rate 1 out-bus 0 start-point 0 bar-trg [0 :tr] loop? 0 vol 1.0]
     (out out-bus (* vol (scaled-play-buf 1 buf rate bar-trg start-point loop?))))
 
-  (def harp (skipping-sequencer :buf (to-sc-id harp-s)
-                                :loop? false
-                                :bar-trg 0
-                                :out-bus 0
-                                :vol 0))
+  (def phat   (skipping-sequencer :buf (to-sc-id phat-s) :loop? true :bar-trg 0 :out-bus 0 :vol 0))
+  (def groove (skipping-sequencer :buf (to-sc-id groove-s) :loop? true :bar-trg 0 :out-bus 0 :vol 0))
 
-  (def start-timestamp (atom nil))
-  (def row-playtime (atom 0))
+  (def phat-start-timestamp (atom nil))
+  (def phat-playtime        (atom 0))
+
+  (def groove-start-timestamp (atom nil))
+  (def groove-playtime        (atom 0))
 
   (defn frames->ms
     "Convert frames to ms for a sample"
@@ -71,7 +72,7 @@
 
   (defn start-at
     "Start player at specified start point expressed in frames"
-    [player start-frame sample]
+    [player start-frame sample start-timestamp]
     (reset! start-timestamp (- (now) (frames->ms start-frame sample)))
     (ctl player :start-point start-frame :bar-trg 1))
 
@@ -84,42 +85,69 @@
 
   (defn start-point-for [row sample] (* row (/ (:size sample) 8)))
 
-  (add-watch row-playtime :key (fn [_ _ _ ns]
-                                 (let [new-cell (cell-from-playtime (int ns) harp-s)]
-                                   (doseq [col (range 0 8)]
-                                     (state-maps/set (:state lp) 0 col 0)
-                                     (device/led-off lp [0 col]))
-                                   (when-not (state-maps/on? (:state lp) 0 new-cell)
-                                     (state-maps/set (:state lp) 0 new-cell 1)
-                                     (device/led-on lp [0 new-cell])))))
+  (defn sample-watch-fn [sample row]
+    (fn [_ _ _ ns]
+      (when (state-maps/active-mode? (:state lp) :left)
+        (let [new-cell (cell-from-playtime (int ns) sample)]
+          (doseq [col (remove #(= % new-cell) (range 0 8))]
+            (state-maps/set (:state lp) row col 0)
+            (device/led-off lp [row col]))
+          (when-not (state-maps/on? (:state lp) row new-cell)
+            (state-maps/set (:state lp) row new-cell 1)
+            (device/led-on lp [row new-cell] 3 :green))))))
 
- (comment (remove-watch row-playtime :key))
+  (add-watch phat-playtime   :phat-key   (sample-watch-fn phat-s 0))
+  (add-watch groove-playtime :groove-key (sample-watch-fn groove-s 1))
 
-  (bind :left :0x0 (fn [lp] (start-at harp (start-point-for 0 harp-s) harp-s)))
-  (bind :left :0x1 (fn [lp] (start-at harp (start-point-for 1 harp-s) harp-s )))
-  (bind :left :0x2 (fn [lp] (start-at harp (start-point-for 2 harp-s) harp-s)))
-  (bind :left :0x3 (fn [lp] (start-at harp (start-point-for 3 harp-s) harp-s)))
-  (bind :left :0x4 (fn [lp] (start-at harp (start-point-for 4 harp-s) harp-s)))
-  (bind :left :0x5 (fn [lp] (start-at harp (start-point-for 5 harp-s) harp-s)))
-  (bind :left :0x6 (fn [lp] (start-at harp (start-point-for 6 harp-s) harp-s)))
-  (bind :left :0x7 (fn [lp] (start-at harp (start-point-for 7 harp-s) harp-s)))
+  (comment (remove-watch phat-playtime :phat-key)
+           (remove-watch phat-playtime :groove-key))
+
+  (bind :left :0x0 (fn [lp] (start-at phat (start-point-for 0 phat-s) phat-s phat-start-timestamp)))
+  (bind :left :0x1 (fn [lp] (start-at phat (start-point-for 1 phat-s) phat-s phat-start-timestamp)))
+  (bind :left :0x2 (fn [lp] (start-at phat (start-point-for 2 phat-s) phat-s phat-start-timestamp)))
+  (bind :left :0x3 (fn [lp] (start-at phat (start-point-for 3 phat-s) phat-s phat-start-timestamp)))
+  (bind :left :0x4 (fn [lp] (start-at phat (start-point-for 4 phat-s) phat-s phat-start-timestamp)))
+  (bind :left :0x5 (fn [lp] (start-at phat (start-point-for 5 phat-s) phat-s phat-start-timestamp)))
+  (bind :left :0x6 (fn [lp] (start-at phat (start-point-for 6 phat-s) phat-s phat-start-timestamp)))
+  (bind :left :0x7 (fn [lp] (start-at phat (start-point-for 7 phat-s) phat-s phat-start-timestamp)))
 
   (bind :left :vol (fn [lp]
                      (if (state-maps/command-right-active? (:state lp) 0)
                        (do
-                         (ctl harp :start-point 0 :vol 1 :bar-trig 1)
-                         (reset! row-playtime 0.0)
-                         (reset! start-timestamp (now)))
-                       (do
-                         (ctl harp :start-point 0 :bar-trig 0 :vol 0)))))
+                         (ctl phat :start-point 0 :vol 1 :bar-trig 1)
+                         (reset! phat-playtime 0.0)
+                         (reset! phat-start-timestamp (now)))
+                       (ctl phat :start-point 0 :bar-trig 0 :vol 0 :loop?))))
 
-  (require '[overtone.at-at :as at-at])
+  (bind :left :1x0 (fn [lp] (start-at groove (start-point-for 0 groove-s) groove-s groove-start-timestamp)))
+  (bind :left :1x1 (fn [lp] (start-at groove (start-point-for 1 groove-s) groove-s groove-start-timestamp)))
+  (bind :left :1x2 (fn [lp] (start-at groove (start-point-for 2 groove-s) groove-s groove-start-timestamp)))
+  (bind :left :1x3 (fn [lp] (start-at groove (start-point-for 3 groove-s) groove-s groove-start-timestamp)))
+  (bind :left :1x4 (fn [lp] (start-at groove (start-point-for 4 groove-s) groove-s groove-start-timestamp)))
+  (bind :left :1x5 (fn [lp] (start-at groove (start-point-for 5 groove-s) groove-s groove-start-timestamp)))
+  (bind :left :1x6 (fn [lp] (start-at groove (start-point-for 6 groove-s) groove-s groove-start-timestamp)))
+  (bind :left :1x7 (fn [lp] (start-at groove (start-point-for 7 groove-s) groove-s groove-start-timestamp)))
+
+  (bind :left :pan (fn [lp]
+                     (if (state-maps/command-right-active? (:state lp) 1)
+                       (do
+                         (ctl groove :start-point 0 :vol 1 :bar-trig 1)
+                         (reset! groove-playtime 0.0)
+                         (reset! groove-start-timestamp (now)))
+                       (ctl groove :start-point 0 :bar-trig 0 :vol 0))))
+
   (defonce time-pool (at-at/mk-pool))
   (def event-loop (at-at/every 100
-                               #(when (state-maps/command-right-active? (:state lp) 0)
-                                  (reset! row-playtime (play-position start-timestamp harp-s)))
-                               time-pool))
+                               #(when (state-maps/active-mode? (:state lp) :left)
 
+                                  (println :ON)
+
+                                  (when (state-maps/command-right-active? (:state lp) 0)
+                                    (reset! phat-playtime (play-position phat-start-timestamp phat-s)))
+
+                                  (when (state-maps/command-right-active? (:state lp) 1)
+                                    (reset! groove-playtime (play-position groove-start-timestamp groove-s))))
+                               time-pool))
   ;;(kill event-loop)
   ;;(kill x)
   ;;(stop)
@@ -180,28 +208,30 @@
   ;; Think of this as the event loop for the grid, triggered on a beat
   (on-trigger count-trig-id
     (fn [beat]
-      (let [current-row (mod (dec beat) 8)
-            last-row (mod (- beat 2) 8)
-            lp (first c/launchpad-kons)
-            col (state-maps/column (:state lp) current-row)
-            last-col (state-maps/column (:state lp) last-row)]
+      (when (state-maps/active-mode? (:state lp) :up)
 
-        ;;Refresh new patterns just before beat 0
-        ;;Ensures new patterns start on beat
-        (when (= current-row 7.0)
-          (doseq [idx (range 6)]
-            (when (state-maps/command-right-active? (:state lp) idx)
-              (sequencer-write! lp-sequencer idx (state-maps/grid-row (:state lp) idx)))))
+        (let [current-row (mod (dec beat) 8)
+              last-row (mod (- beat 2) 8)
+              lp (first c/launchpad-kons)
+              col (state-maps/column (:state lp) current-row)
+              last-col (state-maps/column (:state lp) last-row)]
 
-        (doseq [r (range 0 8)]
-          (when (state-maps/command-right-active? (:state lp) r)
-            (if (= 1 (nth last-col r))
-              (device/led-on lp [r last-row] 1 :green)
-              (device/led-off lp [r last-row]))
+          ;;Refresh new patterns just before beat 0
+          ;;Ensures new patterns start on beat
+          (when (= current-row 7.0)
+            (doseq [idx (range 6)]
+              (when (state-maps/command-right-active? (:state lp) idx)
+                (sequencer-write! lp-sequencer idx (state-maps/grid-row (:state lp) idx)))))
 
-            (if (= (nth col r) 1)
-              (device/led-on lp  [r current-row] 3 :green)
-              (device/led-on lp  [r current-row] 1 :yellow))))))
+          (doseq [r (range 0 8)]
+            (when (state-maps/command-right-active? (:state lp) r)
+              (if (= 1 (nth last-col r))
+                (device/led-on lp [r last-row] 1 :green)
+                (device/led-off lp [r last-row]))
+
+              (if (= (nth col r) 1)
+                (device/led-on lp  [r current-row] 3 :green)
+                (device/led-on lp  [r current-row] 1 :yellow)))))))
     refresh-beat-key)
 
   (defn toggle-row [lp idx]

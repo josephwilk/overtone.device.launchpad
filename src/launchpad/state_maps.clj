@@ -3,6 +3,8 @@
 
 (defn mode [state] (:active @state))
 
+(defn active-mode? [state candidate-mode] (= candidate-mode (mode state)))
+
 (defn active-grid [state] ((mode state) @state))
 
 (defn toggle! [state x y]
