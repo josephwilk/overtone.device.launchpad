@@ -140,7 +140,6 @@
   (def event-loop (at-at/every 100
                                #(when (state-maps/active-mode? (:state lp) :left)
 
-                                  (println :ON)
 
                                   (when (state-maps/command-right-active? (:state lp) 0)
                                     (reset! phat-playtime (play-position phat-start-timestamp phat-s)))
@@ -181,6 +180,8 @@
   (use '[overtone.helpers.lib :only [uuid]])
   (use 'launchpad.sequencer)
 
+  (def lp (first launchpad-kons))
+
   (defonce count-trig-id (trig-id))
 
   (defonce root-trg-bus (control-bus)) ;; global metronome pulse
@@ -205,9 +206,9 @@
   (def subby-s    (sample (freesound-path 25649)))
   (def choir-s    (sample (freesound-path 172323)))
   (def godzilla-s (sample (freesound-path 206078)))
-  (def snow-running-s (sample (freesound-path 160605)))
-  2086
-  (def all-samples [kick-s click-s boom-s subby-s choir-s godzilla-s snow-running-s])
+  (def outiuty-s  (sample (freesound-path 55086)))
+
+  (def all-samples [kick-s click-s boom-s subby-s choir-s godzilla-s outiuty-s])
 
   (def lp-sequencer (mk-sequencer "launchpad-sequencer" all-samples 8 beat-cnt-bus beat-trg-bus 0))
 
@@ -231,7 +232,6 @@
 
         (let [current-row (mod (dec beat) 8)
               last-row (mod (- beat 2) 8)
-              lp (first c/launchpad-kons)
               col (state-maps/column (:state lp) current-row)
               last-col (state-maps/column (:state lp) last-row)]
 
