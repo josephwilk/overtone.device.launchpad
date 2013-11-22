@@ -42,16 +42,21 @@
 
   (def lp (first launchpad-kons))
 
-  (def phat-s (sample (freesound-path 48489)))
+  ;127092
+  (def phat-s   (sample (freesound-path 48489)))
   (def groove-s (sample (freesound-path 48488)))
+  (def funky-s  (sample (freesound-path 172549)))
 
   (defsynth skipping-sequencer
     "Supports looping and jumping position"
-    [buf 0 rate 1 out-bus 0 start-point 0 bar-trg [0 :tr] loop? 0 vol 1.0]
-    (out out-bus (* vol (scaled-play-buf 1 buf rate bar-trg start-point loop?))))
+    [buf 0 rate 1 out-bus 0 start-point 0 bar-trg [0 :tr] loop? 0 vol 1.0 pan 0 rot 1 room 0.5 wet 0.83 damp 0.8 mix 0.83]
+    (let [p (scaled-play-buf 1 buf rate bar-trg start-point loop?)]
+      (out [0 1]
+           (* vol (free-verb p mix room damp)))))
 
   (def phat   (skipping-sequencer :buf (to-sc-id phat-s) :loop? true :bar-trg 0 :out-bus 0 :vol 0))
   (def groove (skipping-sequencer :buf (to-sc-id groove-s) :loop? true :bar-trg 0 :out-bus 0 :vol 0))
+
 
   (def phat-start-timestamp (atom nil))
   (def phat-playtime        (atom 0))
