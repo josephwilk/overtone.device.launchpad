@@ -42,6 +42,7 @@
 
   (def harp-s (sample (freesound-path 27130)))
   (def harp-duration (:duration harp-s))
+  (def harp-frames (:size harp-s))
 
   (defsynth skipping-sequencer
     "Supports looping and jumping position"
@@ -57,64 +58,71 @@
   (def start-timestamp (atom nil))
   (def row-playtime (atom 0))
 
-  (defn start-at [player time]
-    (reset! start-timestamp (- (int time) now))
-    (reset! row-playtime (play-position start-timestamp))
-    (ctl player :start-point time :bar-trg 1))
-
-  (defn cell-from-playtime
-    "return active cell based on play position in seconds"
-    [play-position]
-    (println :play-pos play-position)
-    (if (= (int playtime) 0)
-      0
-      (int (/ playtime (/ harp-duration 8)))))
-
-  (defn start-point-for [row] (* row (/ harp-duration 8)))
-
-  ;;now -> ms
+  (defn frames->ms
+    "Convert frames to ms for a sample"
+    [frame sample] (/ frame (/ (:size sample) (* 1000 (:duration sample)))))
 
   (defn play-position
     "return current play position in seconds"
-    [start-time]
-    (let [elasped-ms (int (- (now) @start-time))
-          elapsed-s (/ elapsed 1000)]
-      (mod elapsed-s harp-duration)))
+    [start-time sample]
+    (let [elapsed-ms (- (now) @start-time)
+          elapsed-s (/ elapsed-ms 1000)]
+      (mod elapsed-s (:duration sample))))
 
-  (add-watch row-playtime :key (fn [k r os ns]
-                                 (println :bing os ns)
-                                 (let [old-cell (cell-from-playtime os)
-                                       new-cell (cell-from-playtime ns)]
-                                   (when (state-maps/on? (:state lp) 0 old-cell )
-                                     (state-maps/set (:state lp) 0 old-cell 0)
-                                     (device/led-off lp [0 old-cell]))
+  (defn start-at
+    "Start player at specified start point expressed in frames"
+    [player start-frame sample]
+    (reset! start-timestamp (- (now) (frames->ms start-frame sample)))
+    (ctl player :start-point start-frame :bar-trg 1))
+
+  (defn cell-from-playtime
+    "return active cell based on play position in seconds"
+    [play-pos sample]
+    (if (= (int play-pos) 0)
+      0
+      (int (/ play-pos (/ (:duration sample) 8)))))
+
+  (defn start-point-for [row sample] (* row (/ (:size sample) 8)))
+
+  ;;now -> ms
+
+  (add-watch row-playtime :key (fn [_ _ _ ns]
+                                 (let [new-cell (cell-from-playtime (int ns) harp-s)]
+                                   (doseq [col (range 0 8)]
+                                     (state-maps/set (:state lp) 0 col 0)
+                                     (device/led-off lp [0 col]))
                                    (when-not (state-maps/on? (:state lp) 0 new-cell)
                                      (state-maps/set (:state lp) 0 new-cell 1)
                                      (device/led-on lp [0 new-cell])))))
 
-  (comment
-    (remove-watch row-playtime :key))
+ (comment (remove-watch row-playtime :key))
 
-  (bind :left :0x0 (fn [lp] (start-at harp (start-point-for 0))))
-  (bind :left :0x1 (fn [lp] (start-at harp (start-point-for 1))))
-  (bind :left :0x2 (fn [lp] (start-at harp (start-point-for 2))))
-  (bind :left :0x3 (fn [lp] (start-at harp (start-point-for 3))))
-  (bind :left :0x4 (fn [lp] (start-at harp (start-point-for 4))))
-  (bind :left :0x5 (fn [lp] (start-at harp (start-point-for 5))))
-  (bind :left :0x6 (fn [lp] (start-at harp (start-point-for 6) )))
-  (bind :left :0x7 (fn [lp] (start-at harp (start-point-for 7))))
+  (bind :left :0x0 (fn [lp] (start-at harp (start-point-for 0 harp-s) harp-s)))
+  (bind :left :0x1 (fn [lp] (start-at harp (start-point-for 1 harp-s) harp-s )))
+  (bind :left :0x2 (fn [lp] (start-at harp (start-point-for 2 harp-s) harp-s)))
+  (bind :left :0x3 (fn [lp] (start-at harp (start-point-for 3 harp-s) harp-s)))
+  (bind :left :0x4 (fn [lp] (start-at harp (start-point-for 4 harp-s) harp-s)))
+  (bind :left :0x5 (fn [lp] (start-at harp (start-point-for 5 harp-s) harp-s)))
+  (bind :left :0x6 (fn [lp] (start-at harp (start-point-for 6 harp-s) harp-s)))
+  (bind :left :0x7 (fn [lp] (start-at harp (start-point-for 7 harp-s) harp-s)))
 
   (bind :left :vol (fn [lp]
                      (if (state-maps/command-right-active? (:state lp) 0)
                        (do
-                         (ctl harp :start-time 0 :vol 1 :bar-trig 1)
-                         (reset! row-playtime 0)
+                         (ctl harp :start-point 0 :vol 1 :bar-trig 1)
+                         (reset! row-playtime 0.0)
                          (reset! start-timestamp (now)))
-                       (ctl harp :vol 0 :bar-trig 0))))
+                       (do
+                         (ctl harp :start-point 0 :bar-trig 0 :vol 0)))))
 
-  (def event-loop (every 100 #(reset! row-playtime (play-position @start-timestamp))))
+  (require '[overtone.at-at :as at-at])
+  (defonce time-pool (at-at/mk-pool))
+  (def event-loop (at-at/every 100
+                               #(when (state-maps/command-right-active? (:state lp) 0)
+                                  (reset! row-playtime (play-position start-timestamp harp-s)))
+                               time-pool))
 
-  ;;(stop event-loop)
+  ;;(kill event-loop)
   ;;(kill x)
   ;;(stop)
   )
@@ -245,7 +253,6 @@
   (bind :down :pan  (fn [lp] (fire-sequence lp snare 1)))
   (bind :down :snda (fn [lp] (fire-sequence lp clap 2)))
   (bind :down :arm  (fn [lp] (stop))))
-
 
 (comment
   (do
