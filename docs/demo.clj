@@ -148,6 +148,25 @@
                                   (when (state-maps/command-right-active? (:state lp) 1)
                                     (reset! groove-playtime (play-position groove-start-timestamp groove-s))))
                                time-pool))
+
+  ;;Playing
+
+  (comment
+    (ctl groove :out-bus 0 :vol 1)
+    (ctl phat   :out-bus 0 :vol 1.0 :rate 0)
+    (ctl groove :pan -1)
+    (ctl groove :pan 1)
+
+    (ctl groove :rate 1)
+
+    (ctl phat :mix 1 :room 0.8 :damp 0.8)
+    (ctl phat :mix 0 :room 0 :damp 0)
+    (ctl groove :mix 0 :room 0 :damp 0)
+
+    (ctl phat :room 0.8)
+    (ctl phat :wet 0.0 :room 0)
+    (ctl phat :rot 1))
+
   ;;(kill event-loop)
   ;;(kill x)
   ;;(stop)
