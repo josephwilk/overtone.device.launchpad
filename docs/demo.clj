@@ -84,8 +84,6 @@
 
   (defn start-point-for [row sample] (* row (/ (:size sample) 8)))
 
-  ;;now -> ms
-
   (add-watch row-playtime :key (fn [_ _ _ ns]
                                  (let [new-cell (cell-from-playtime (int ns) harp-s)]
                                    (doseq [col (range 0 8)]
