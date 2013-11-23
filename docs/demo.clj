@@ -61,7 +61,7 @@
   (def funky-row  {:playtime (atom 0) :start (atom nil) :row 2 :sample groove-s :sequencer funky})
 
   (use 'launchpad.plugin.sample-rows :reload)
-  (sample-rows lp [phat-row groove-row funky-row] :left)
+  (sample-rows lp :left [phat-row groove-row funky-row])
 
   ;;Playing
 

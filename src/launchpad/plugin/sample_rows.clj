@@ -77,7 +77,7 @@
              (keyword (str "sample-" idx "-" mode))
              (sample-watch-fn lp (:sample sample-row) (:row sample-row))))
 
-(defn sample-rows [lp samples mode]
+(defn sample-rows [lp mode samples]
   (doseq [[idx sample]
           (map vector (iterate inc 0) samples)] (setup-row lp sample mode idx))
   (setup-event-loop lp samples mode))
