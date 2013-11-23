@@ -14,7 +14,7 @@ https://clojars.org/launchpad
 
 ## Usage
 
-Launchpad works through an evented system. While you can do anything with those events `launchpad.core` setups some 
+Launchpad works through an evented system. While you can do anything with those events `launchpad.core` setups some
 useful defaults:
 
 * All top control buttons except user1/2
@@ -33,15 +33,45 @@ useful defaults:
 
 (boot!)
 
-(bind :up   :0x0 #(kick))
-(bind :down :0x0 #(hat3))
+(bind :up :0x0 #(kick))
+(bind :up :0x1 #(hat3))
 ```
 
-### Advanced Examples
+## Plugins
 
-* Expressing drum/sample positions using LEDS (automatically synching to the beat). 
+### Mapping samples to a row
+
+Map each sample to a row where each button forces playback of the sample to a specific timepoint. LED tracks current point in sample.
+
+```clojure
+(use 'overtone.live)
+(use 'launchpad.core)
+(use 'launchpad.sequencer)
+(use 'launchpad.plugin.sample-rows)
+
+(boot!)
+
+(def lp (first launchpad-kons))
+(def phat-s (sample (freesound-path 48489)))
+(def phat (skipping-sequencer :buf (to-sc-id phat-s)
+                              :loop? true
+                              :bar-trg 0
+                              :out-bus 0
+                              :vol 0))
+
+(def phat-row {:playtime (atom 0)
+               :start (atom nil)
+               :row 0
+               :sample phat-s
+               :sequencer phat})
+
+(sample-rows lp :left [phat-row])
+```
+
+### Demo Examples
+
+* Expressing drum/sample positions using LEDS (automatically synching to the beat).
 * Adding a metronome cell which flashes with beat
-* Mapping sample to a row, each button forces a jump to a timepoint (like MLR)
 * Turning a grid into an instruments
 
 Explore the code here: https://github.com/josephwilk/overtone.device.launchpad/blob/master/docs/demo.clj
