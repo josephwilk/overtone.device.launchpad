@@ -46,112 +46,22 @@
   (def groove-s (sample (freesound-path 48488)))
   (def funky-s  (sample (freesound-path 172549)))
 
-  (defsynth skipping-sequencer
-    "Supports looping and jumping position"
+  (defsynth reverb-skipping-sequencer
     [buf 0 rate 1 out-bus 0 start-point 0 bar-trg [0 :tr] loop? 0 vol 1.0 pan 0 rot 1 room 0.5 wet 0.83 damp 0.8 mix 0.83]
     (let [p (scaled-play-buf 1 buf rate bar-trg start-point loop?)]
       (out [0 1]
            (* vol (free-verb p mix room damp)))))
 
-  (def phat   (skipping-sequencer :buf (to-sc-id phat-s) :loop? true :bar-trg 0 :out-bus 0 :vol 0))
-  (def groove (skipping-sequencer :buf (to-sc-id groove-s) :loop? true :bar-trg 0 :out-bus 0 :vol 0))
+  (def phat   (reverb-skipping-sequencer :buf (to-sc-id phat-s) :loop? true :bar-trg 0 :out-bus 0 :vol 0))
+  (def groove (reverb-skipping-sequencer :buf (to-sc-id groove-s) :loop? true :bar-trg 0 :out-bus 0 :vol 0))
+  (def funky  (reverb-skipping-sequencer :buf (to-sc-id funky-s) :loop? true :bar-trg 0 :out-bus 0 :vol 0))
 
-  (def phat-row {:playtime (atom 0) :start (atom nil) :row 0   :sample phat-s})
-  (def groove-row {:playtime (atom 0) :start (atom nil) :row 1 :sample groove-s})
+  (def phat-row   {:playtime (atom 0) :start (atom nil) :row 0 :sample phat-s   :sequencer phat})
+  (def groove-row {:playtime (atom 0) :start (atom nil) :row 1 :sample groove-s :sequencer groove})
+  (def funky-row  {:playtime (atom 0) :start (atom nil) :row 2 :sample groove-s :sequencer funky})
 
-  (def playtime {:phat (atom 0)
-                 :groove (atom 0)})
-
-  (def start-timestamp {:phat (atom nil)
-                        :groove (atom nil)})
-
-  (def sample-rows {:phat 0 :groove 1})
-
-  (defn frames->ms
-    "Convert frames to ms for a sample"
-    [frame sample] (/ frame (/ (:size sample) (* 1000 (:duration sample)))))
-
-  (defn play-position
-    "return current play position in seconds"
-    [start-time sample]
-    (let [elapsed-ms (- (now) @start-time)
-          elapsed-s (/ elapsed-ms 1000)]
-      (mod elapsed-s (:duration sample))))
-
-  (defn start-at
-    "Start player at specified start point expressed in frames"
-    [player start-frame sample start-timestamp]
-    (reset! start-timestamp (- (now) (frames->ms start-frame sample)))
-    (ctl player :start-point start-frame :bar-trg 1))
-
-  (defn cell-from-playtime
-    "return active cell based on play position in seconds"
-    [play-pos sample]
-    (if (= (int play-pos) 0)
-      0
-      (int (/ play-pos (/ (:duration sample) 8)))))
-
-  (defn start-point-for [row sample] (* row (/ (:size sample) 8)))
-
-  (defn sample-watch-fn [sample row]
-    (fn [_ _ _ ns]
-      (when (state-maps/active-mode? (:state lp) :left)
-        (let [new-cell (cell-from-playtime (int ns) sample)]
-          (doseq [col (remove #(= % new-cell) (range 0 8))]
-            (state-maps/set (:state lp) row col 0)
-            (device/led-off lp [row col]))
-          (when-not (state-maps/on? (:state lp) row new-cell)
-            (state-maps/set (:state lp) row new-cell 1)
-            (device/led-on lp [row new-cell] 3 :green))))))
-
-  (add-watch (:phat playtime)   :phat-key   (sample-watch-fn phat-s (:phat sample-rows)))
-  (add-watch (:groove playtime) :groove-key (sample-watch-fn groove-s (:groove sample-rows)))
-
-  (comment (remove-watch (:phat playtime)   :phat-key)
-           (remove-watch (:groove playtime) :groove-key))
-
-  (bind :left :0x0 (fn [lp] (start-at phat (start-point-for 0 phat-s) phat-s (:phat start-timestamp))))
-  (bind :left :0x1 (fn [lp] (start-at phat (start-point-for 1 phat-s) phat-s (:phat start-timestamp))))
-  (bind :left :0x2 (fn [lp] (start-at phat (start-point-for 2 phat-s) phat-s (:phat start-timestamp))))
-  (bind :left :0x3 (fn [lp] (start-at phat (start-point-for 3 phat-s) phat-s (:phat start-timestamp))))
-  (bind :left :0x4 (fn [lp] (start-at phat (start-point-for 4 phat-s) phat-s (:phat start-timestamp))))
-  (bind :left :0x5 (fn [lp] (start-at phat (start-point-for 5 phat-s) phat-s (:phat start-timestamp))))
-  (bind :left :0x6 (fn [lp] (start-at phat (start-point-for 6 phat-s) phat-s (:phat start-timestamp))))
-  (bind :left :0x7 (fn [lp] (start-at phat (start-point-for 7 phat-s) phat-s (:phat start-timestamp))))
-
-  (bind :left :vol (fn [lp]
-                     (if (state-maps/command-right-active? (:state lp) (:phat sample-rows))
-                       (do
-                         (ctl phat :start-point 0 :vol 1 :bar-trig 1)
-                         (reset! (:phat playtime) 0.0)
-                         (reset! (:phat start-timestamp) (now)))
-                       (ctl phat :start-point 0 :bar-trig 0 :vol 0 :loop?))))
-
-  (bind :left :1x0 (fn [lp] (start-at groove (start-point-for 0 groove-s) groove-s (:groove start-timestamp))))
-  (bind :left :1x1 (fn [lp] (start-at groove (start-point-for 1 groove-s) groove-s (:groove start-timestamp))))
-  (bind :left :1x2 (fn [lp] (start-at groove (start-point-for 2 groove-s) groove-s (:groove start-timestamp))))
-  (bind :left :1x3 (fn [lp] (start-at groove (start-point-for 3 groove-s) groove-s (:groove start-timestamp))))
-  (bind :left :1x4 (fn [lp] (start-at groove (start-point-for 4 groove-s) groove-s (:groove start-timestamp))))
-  (bind :left :1x5 (fn [lp] (start-at groove (start-point-for 5 groove-s) groove-s (:groove start-timestamp))))
-  (bind :left :1x6 (fn [lp] (start-at groove (start-point-for 6 groove-s) groove-s (:groove start-timestamp))))
-  (bind :left :1x7 (fn [lp] (start-at groove (start-point-for 7 groove-s) groove-s (:groove start-timestamp))))
-
-  (bind :left :pan (fn [lp]
-                     (if (state-maps/command-right-active? (:state lp) (:groove sample-rows))
-                       (do
-                         (ctl groove :start-point 0 :vol 1 :bar-trig 1)
-                         (reset! (:groove playtime) 0.0)
-                         (reset! (:groove start-timestamp) (now)))
-                       (ctl groove :start-point 0 :bar-trig 0 :vol 0))))
-
-  (defonce time-pool (at-at/mk-pool))
-  (def event-loop (at-at/every 100
-    #(when (state-maps/active-mode? (:state lp) :left)
-       (when (state-maps/command-right-active? (:state lp) (:phat sample-rows))
-         (reset! (:phat playtime) (play-position (:phat start-timestamp) phat-s)))
-       (when (state-maps/command-right-active? (:state lp) (:groove sample-rows))
-         (reset! (:groove playtime) (play-position (:groove start-timestamp) groove-s))))
-    time-pool))
+  (use 'launchpad.plugin.sample-rows :reload)
+  (sample-rows lp [phat-row groove-row funky-row] :left)
 
   ;;Playing
 
@@ -171,8 +81,6 @@
     (ctl phat :wet 0.0 :room 0)
     (ctl phat :rot 1))
 
-  ;;(kill event-loop)
-  ;;(kill x)
   ;;(stop)
   )
 

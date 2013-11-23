@@ -85,6 +85,7 @@
                        :grid {:fn midi-note-on}}}})
 
 (def modes (-> launchpad-config :interfaces :grid-controls :controls keys))
+(def side-controls [:vol :pan :snda :sndb :stop :trkon :solo :arm])
 
 (defn side->row [name] (-> launchpad-config :interfaces :grid-controls :side-controls name :row))
 
