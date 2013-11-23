@@ -42,7 +42,6 @@
 
   (def lp (first launchpad-kons))
 
-  ;127092
   (def phat-s   (sample (freesound-path 48489)))
   (def groove-s (sample (freesound-path 48488)))
   (def funky-s  (sample (freesound-path 172549)))
@@ -57,12 +56,16 @@
   (def phat   (skipping-sequencer :buf (to-sc-id phat-s) :loop? true :bar-trg 0 :out-bus 0 :vol 0))
   (def groove (skipping-sequencer :buf (to-sc-id groove-s) :loop? true :bar-trg 0 :out-bus 0 :vol 0))
 
+  (def phat-row {:playtime (atom 0) :start (atom nil) :row 0   :sample phat-s})
+  (def groove-row {:playtime (atom 0) :start (atom nil) :row 1 :sample groove-s})
 
-  (def phat-start-timestamp (atom nil))
-  (def phat-playtime        (atom 0))
+  (def playtime {:phat (atom 0)
+                 :groove (atom 0)})
 
-  (def groove-start-timestamp (atom nil))
-  (def groove-playtime        (atom 0))
+  (def start-timestamp {:phat (atom nil)
+                        :groove (atom nil)})
+
+  (def sample-rows {:phat 0 :groove 1})
 
   (defn frames->ms
     "Convert frames to ms for a sample"
@@ -101,57 +104,54 @@
             (state-maps/set (:state lp) row new-cell 1)
             (device/led-on lp [row new-cell] 3 :green))))))
 
-  (add-watch phat-playtime   :phat-key   (sample-watch-fn phat-s 0))
-  (add-watch groove-playtime :groove-key (sample-watch-fn groove-s 1))
+  (add-watch (:phat playtime)   :phat-key   (sample-watch-fn phat-s (:phat sample-rows)))
+  (add-watch (:groove playtime) :groove-key (sample-watch-fn groove-s (:groove sample-rows)))
 
-  (comment (remove-watch phat-playtime :phat-key)
-           (remove-watch phat-playtime :groove-key))
+  (comment (remove-watch (:phat playtime)   :phat-key)
+           (remove-watch (:groove playtime) :groove-key))
 
-  (bind :left :0x0 (fn [lp] (start-at phat (start-point-for 0 phat-s) phat-s phat-start-timestamp)))
-  (bind :left :0x1 (fn [lp] (start-at phat (start-point-for 1 phat-s) phat-s phat-start-timestamp)))
-  (bind :left :0x2 (fn [lp] (start-at phat (start-point-for 2 phat-s) phat-s phat-start-timestamp)))
-  (bind :left :0x3 (fn [lp] (start-at phat (start-point-for 3 phat-s) phat-s phat-start-timestamp)))
-  (bind :left :0x4 (fn [lp] (start-at phat (start-point-for 4 phat-s) phat-s phat-start-timestamp)))
-  (bind :left :0x5 (fn [lp] (start-at phat (start-point-for 5 phat-s) phat-s phat-start-timestamp)))
-  (bind :left :0x6 (fn [lp] (start-at phat (start-point-for 6 phat-s) phat-s phat-start-timestamp)))
-  (bind :left :0x7 (fn [lp] (start-at phat (start-point-for 7 phat-s) phat-s phat-start-timestamp)))
+  (bind :left :0x0 (fn [lp] (start-at phat (start-point-for 0 phat-s) phat-s (:phat start-timestamp))))
+  (bind :left :0x1 (fn [lp] (start-at phat (start-point-for 1 phat-s) phat-s (:phat start-timestamp))))
+  (bind :left :0x2 (fn [lp] (start-at phat (start-point-for 2 phat-s) phat-s (:phat start-timestamp))))
+  (bind :left :0x3 (fn [lp] (start-at phat (start-point-for 3 phat-s) phat-s (:phat start-timestamp))))
+  (bind :left :0x4 (fn [lp] (start-at phat (start-point-for 4 phat-s) phat-s (:phat start-timestamp))))
+  (bind :left :0x5 (fn [lp] (start-at phat (start-point-for 5 phat-s) phat-s (:phat start-timestamp))))
+  (bind :left :0x6 (fn [lp] (start-at phat (start-point-for 6 phat-s) phat-s (:phat start-timestamp))))
+  (bind :left :0x7 (fn [lp] (start-at phat (start-point-for 7 phat-s) phat-s (:phat start-timestamp))))
 
   (bind :left :vol (fn [lp]
-                     (if (state-maps/command-right-active? (:state lp) 0)
+                     (if (state-maps/command-right-active? (:state lp) (:phat sample-rows))
                        (do
                          (ctl phat :start-point 0 :vol 1 :bar-trig 1)
-                         (reset! phat-playtime 0.0)
-                         (reset! phat-start-timestamp (now)))
+                         (reset! (:phat playtime) 0.0)
+                         (reset! (:phat start-timestamp) (now)))
                        (ctl phat :start-point 0 :bar-trig 0 :vol 0 :loop?))))
 
-  (bind :left :1x0 (fn [lp] (start-at groove (start-point-for 0 groove-s) groove-s groove-start-timestamp)))
-  (bind :left :1x1 (fn [lp] (start-at groove (start-point-for 1 groove-s) groove-s groove-start-timestamp)))
-  (bind :left :1x2 (fn [lp] (start-at groove (start-point-for 2 groove-s) groove-s groove-start-timestamp)))
-  (bind :left :1x3 (fn [lp] (start-at groove (start-point-for 3 groove-s) groove-s groove-start-timestamp)))
-  (bind :left :1x4 (fn [lp] (start-at groove (start-point-for 4 groove-s) groove-s groove-start-timestamp)))
-  (bind :left :1x5 (fn [lp] (start-at groove (start-point-for 5 groove-s) groove-s groove-start-timestamp)))
-  (bind :left :1x6 (fn [lp] (start-at groove (start-point-for 6 groove-s) groove-s groove-start-timestamp)))
-  (bind :left :1x7 (fn [lp] (start-at groove (start-point-for 7 groove-s) groove-s groove-start-timestamp)))
+  (bind :left :1x0 (fn [lp] (start-at groove (start-point-for 0 groove-s) groove-s (:groove start-timestamp))))
+  (bind :left :1x1 (fn [lp] (start-at groove (start-point-for 1 groove-s) groove-s (:groove start-timestamp))))
+  (bind :left :1x2 (fn [lp] (start-at groove (start-point-for 2 groove-s) groove-s (:groove start-timestamp))))
+  (bind :left :1x3 (fn [lp] (start-at groove (start-point-for 3 groove-s) groove-s (:groove start-timestamp))))
+  (bind :left :1x4 (fn [lp] (start-at groove (start-point-for 4 groove-s) groove-s (:groove start-timestamp))))
+  (bind :left :1x5 (fn [lp] (start-at groove (start-point-for 5 groove-s) groove-s (:groove start-timestamp))))
+  (bind :left :1x6 (fn [lp] (start-at groove (start-point-for 6 groove-s) groove-s (:groove start-timestamp))))
+  (bind :left :1x7 (fn [lp] (start-at groove (start-point-for 7 groove-s) groove-s (:groove start-timestamp))))
 
   (bind :left :pan (fn [lp]
-                     (if (state-maps/command-right-active? (:state lp) 1)
+                     (if (state-maps/command-right-active? (:state lp) (:groove sample-rows))
                        (do
                          (ctl groove :start-point 0 :vol 1 :bar-trig 1)
-                         (reset! groove-playtime 0.0)
-                         (reset! groove-start-timestamp (now)))
+                         (reset! (:groove playtime) 0.0)
+                         (reset! (:groove start-timestamp) (now)))
                        (ctl groove :start-point 0 :bar-trig 0 :vol 0))))
 
   (defonce time-pool (at-at/mk-pool))
   (def event-loop (at-at/every 100
-                               #(when (state-maps/active-mode? (:state lp) :left)
-
-
-                                  (when (state-maps/command-right-active? (:state lp) 0)
-                                    (reset! phat-playtime (play-position phat-start-timestamp phat-s)))
-
-                                  (when (state-maps/command-right-active? (:state lp) 1)
-                                    (reset! groove-playtime (play-position groove-start-timestamp groove-s))))
-                               time-pool))
+    #(when (state-maps/active-mode? (:state lp) :left)
+       (when (state-maps/command-right-active? (:state lp) (:phat sample-rows))
+         (reset! (:phat playtime) (play-position (:phat start-timestamp) phat-s)))
+       (when (state-maps/command-right-active? (:state lp) (:groove sample-rows))
+         (reset! (:groove playtime) (play-position (:groove start-timestamp) groove-s))))
+    time-pool))
 
   ;;Playing
 
