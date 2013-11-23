@@ -1,6 +1,12 @@
 (ns launchpad.sequencer
   (:use overtone.live))
 
+(defsynth skipping-sequencer
+  "Supports looping and jumping position"
+  [buf 0 rate 1 out-bus 0 start-point 0 bar-trg [0 :tr] loop? 0 vol 1.0 pan 0]
+  (let [p (scaled-play-buf 1 buf rate bar-trg start-point loop?)]
+    (out [0 1] (* vol p))))
+
 (defsynth orig-mono-sequencer
   "Plays a single channel audio buffer (with panning)"
   [buf 0 rate 1 out-bus 0 beat-num 0 pattern 0  num-steps 8 beat-cnt-bus 0 beat-trg-bus 0 rq-bus 0]
