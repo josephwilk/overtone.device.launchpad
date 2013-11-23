@@ -59,9 +59,10 @@
 (defn setup-row [lp sample-row mode idx]
   (doseq [cell (range 0 8)]
     (bind mode (keyword (str idx "x" cell))
-          (fn [lp] (start-at (:sequencer sample-row) (start-point-for cell (:sample sample-row)) (:sample sample-row) (:start sample-row)))))
-
-  (println (nth device/side-controls idx))
+          (fn [lp] (start-at (:sequencer sample-row)
+                            (start-point-for cell (:sample sample-row))
+                            (:sample sample-row)
+                            (:start sample-row)))))
 
   (bind mode (nth device/side-controls idx)
         (fn [lp]
