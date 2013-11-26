@@ -165,12 +165,11 @@
           (doseq [r (range 0 8)]
             (when (state-maps/command-right-active? (:state lp) r)
               (if (= 1 (nth last-col r))
-                (when (= 1 (nth (sequencer-pattern r) col))
-                  (device/led-on lp [r last-row] 1 :green))
+                (device/led-on lp [r last-row] 1 :green)
                 (device/led-off lp [r last-row]))
 
-              (if (= (nth col r) 1)
-                (when (= 1 (nth (sequencer-pattern lp-sequencer r) col))
+              (if (= 1 (nth col r))
+                (when (= 1.0 (nth (sequencer-pattern lp-sequencer r) current-row))
                   (device/led-on lp  [r current-row] 3 :green))
                 (device/led-on lp  [r current-row] 1 :amber)))))))
     refresh-beat-key)
