@@ -24,7 +24,6 @@
 (def led-colors [:red :green :yellow :orange :amber])
 
 (def flags {:ignore 0
-            :copy 4
             :clear 8
             :copy 12})
 
