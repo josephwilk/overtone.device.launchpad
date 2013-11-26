@@ -143,7 +143,7 @@
     (led-flash-on* rcvr id brightness color)))
 
 (defn led-on
-  ([launchpad id] (led-on launchpad id full-brightness :yellow))
+  ([launchpad id] (led-on launchpad id full-brightness :amber))
   ([launchpad id brightness color]
       (let [rcvr (-> launchpad :rcv)]
         (led-on* rcvr id brightness color))))
@@ -288,7 +288,7 @@
   [rcvs stateful-devs]
   (doseq [rcv rcvs]
     (intromation rcv)
-    (led-on* rcv :up 3 :yellow))
+    (led-on* rcv :up 3 :amber))
   (doall
    (map (fn [[stateful-dev rcv id]]
           (register-event-handlers-for-launchpad stateful-dev rcv id))

@@ -143,7 +143,7 @@
     (fn [beat]
       (let [lp (first c/launchpad-kons)
             brightness (mod beat 4)]
-        (device/led-on  lp [7 7] brightness :yellow)))
+        (device/led-on  lp [7 7] brightness :amber)))
     beat-rep-key)
 
   ;; Think of this as the event loop for the grid, triggered on a beat
@@ -172,7 +172,7 @@
               (if (= (nth col r) 1)
                 (when (= 1 (nth (sequencer-pattern lp-sequencer r) col))
                   (device/led-on lp  [r current-row] 3 :green))
-                (device/led-on lp  [r current-row] 1 :yellow)))))))
+                (device/led-on lp  [r current-row] 1 :amber)))))))
     refresh-beat-key)
 
   (defn toggle-row [lp idx]
