@@ -150,7 +150,6 @@
   (on-trigger count-trig-id
     (fn [beat]
       (when (state-maps/active-mode? (:state lp) :up)
-
         (let [current-row (mod (dec beat) 8)
               last-row (mod (- beat 2) 8)
               col (state-maps/column (:state lp) current-row)
@@ -166,11 +165,13 @@
           (doseq [r (range 0 8)]
             (when (state-maps/command-right-active? (:state lp) r)
               (if (= 1 (nth last-col r))
-                (device/led-on lp [r last-row] 1 :green)
+                (when (= 1 (nth (sequencer-pattern r) col))
+                  (device/led-on lp [r last-row] 1 :green))
                 (device/led-off lp [r last-row]))
 
               (if (= (nth col r) 1)
-                (device/led-on lp  [r current-row] 3 :green)
+                (when (= 1 (nth (sequencer-pattern lp-sequencer r) col))
+                  (device/led-on lp  [r current-row] 3 :green))
                 (device/led-on lp  [r current-row] 1 :yellow)))))))
     refresh-beat-key)
 
