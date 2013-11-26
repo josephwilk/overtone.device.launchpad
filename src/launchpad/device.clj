@@ -21,7 +21,7 @@
 (def medium-brightness 2)
 (def full-brightness   3)
 
-(def led-colors [:red :green :yellow])
+(def led-colors [:red :green :yellow :orange :amber])
 
 (def flags {:normal 12
             :flash 8
@@ -95,10 +95,14 @@
           green (case color
                   :green intensity
                   :yellow intensity
+                  :orange 2
+                  :amber intensity
                   0)
           red (case color
                 :red intensity
-                :yellow intensity
+                :yellow 2
+                :orange intensity
+                :amber intensity
                 0)
           mode :normal]
       (+ (* 16 green)
