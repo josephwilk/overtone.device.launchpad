@@ -168,7 +168,7 @@
       (toggle-led launchpad [x y] cell))))
 
 (defn turn-flashing-on  [rcvr] (midi-control rcvr 0 40))
-(defn turn-flashing-off [rcvr] (mid-control rcvr 0 32))
+(defn turn-flashing-off [rcvr] (midi-control rcvr 0 32))
 (defn reset-launchpad   [rcvr] (midi-control rcvr 0 0))
 
 (defn intromation [rcvr]
