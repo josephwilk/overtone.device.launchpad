@@ -23,9 +23,10 @@
 
 (def led-colors [:red :green :yellow :orange :amber])
 
-(def flags {:normal 12
-            :flash 8
-            :double-buffering 0})
+(def flags {:ignore 0
+            :copy 4
+            :clear 8
+            :copy 12})
 
 (def grid-notes
   [(range 0 9)
@@ -89,7 +90,7 @@
 
 (defn side->row [name] (-> launchpad-config :interfaces :grid-controls :side-controls name :row))
 
-(defn- velocity [{color :color intensity :intensity}]
+(defn- velocity [{color :color intensity :intensity mode :mode}]
   (if (some #{color} led-colors)
     (let [intensity (if (> intensity 3) 3 intensity)
           green (case color
@@ -104,7 +105,7 @@
                 :orange intensity
                 :amber intensity
                 0)
-          mode :normal]
+          mode (or mode :copy)]
       (+ (* 16 green)
          red
          (mode flags)))
@@ -131,6 +132,17 @@
        (midi-fn rcvr led-id (velocity {:color color
                                        :intensity brightness})))))
 
+(defn- led-flash-on*
+  ([rcvr id brightness color]
+     (when-let [{led-id :note midi-fn :fn} (led-details id)]
+       (midi-fn rcvr led-id (velocity {:color color
+                                       :intensity brightness
+                                       :mode :clear})))))
+
+(defn led-flash-on [launchpad id brightness color]
+  (let [rcvr (-> launchpad :rcv)]
+    (led-flash-on* rcvr id brightness color)))
+
 (defn led-on
   ([launchpad id] (led-on launchpad id full-brightness :yellow))
   ([launchpad id brightness color]
@@ -156,7 +168,9 @@
             [y cell] (map vector (iterate inc 0) row)]
       (toggle-led launchpad [x y] cell))))
 
-(defn reset-launchpad [rcvr] (midi-control rcvr 0 0))
+(defn turn-flashing-on  [rcvr] (midi-control rcvr 0 40))
+(defn turn-flashing-off [rcvr] (mid-control rcvr 0 32))
+(defn reset-launchpad   [rcvr] (midi-control rcvr 0 0))
 
 (defn intromation [rcvr]
   (reset-launchpad rcvr)
