@@ -27,27 +27,39 @@
        (swap! (:state lp) assoc-in [:fn-map mode cell] fun)))
 
   (e/on-event [:Launchpad :control :up]
-              (fn [m] (mode/trigger (:launchpad m) :up))
+              (fn [{lp :launchpad}]
+                (when-not (mode/session? lp)
+                  (mode/trigger lp :up)))
               ::up-mode)
 
   (e/on-event [:Launchpad :control :down]
-              (fn [m] (mode/trigger (:launchpad m) :down))
+              (fn [{lp :launchpad}]
+                (when-not (mode/session? lp)
+                  (mode/trigger lp :down)))
               ::down-mode)
 
   (e/on-event [:Launchpad :control :left]
-              (fn [m] (mode/trigger (:launchpad m) :left))
+              (fn [{lp :launchpad}]
+                (when-not (mode/session? lp)
+                  (mode/trigger lp :left)))
               ::left-mode)
 
   (e/on-event [:Launchpad :control :right]
-              (fn [m] (mode/trigger (:launchpad m) :right))
+              (fn [{lp :launchpad}]
+                (when-not (mode/session? lp)
+                  (mode/trigger lp :right)))
               ::right-mode)
 
   (e/on-event [:Launchpad :control :user1]
-              (fn [m] (mode/trigger (:launchpad m) :user1))
+              (fn [{lp :launchpad}]
+                (when-not (mode/session? lp)
+                  (mode/trigger lp :user1)))
               ::user1-mode)
 
   (e/on-event [:Launchpad :control :user2]
-              (fn [m] (mode/trigger (:launchpad m) :user2))
+              (fn [{lp :launchpad}]
+                (when-not (mode/session? lp)
+                  (mode/trigger lp :user2)))
               ::user2-mode)
 
   (e/on-event [:Launchpad :control :mixer]
@@ -55,7 +67,9 @@
               ::mixer-mode)
 
   (e/on-event [:Launchpad :control :session]
-              (fn [m] (mode/trigger (:launchpad m) :session))
+              (fn [m]
+                (when (= (:val m) 1.0)
+                  (mode/trigger-binary-mode (:launchpad m) :session)))
               ::session-mode)
 
   (let [lp-id 0]

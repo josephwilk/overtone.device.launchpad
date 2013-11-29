@@ -247,15 +247,21 @@
    (doseq [[k v] (-> interfaces :grid-controls :controls)]
       (let [type      (:type v)
             note      (:note v)
-            on-handle    (concat device-key [type note])
+            on-handle (concat device-key [type note])
             on-fn (fn [{:keys [data2-f]}]
-                    (event [:Launchpad :control k]
-                           :val data2-f
-                           :id k
-                           :launchpad launchpad
-                           :idx idx)
+                    (if (zero? (:val data2-f))
+                      (event [:Launchpad :control (str k "-off")]
+                             :val data2-f
+                             :id k
+                             :launchpad launchpad
+                             :idx idx)
+                      (event [:Launchpad :control (str k "-on")]
+                             :val data2-f
+                             :id k
+                             :launchpad launchpad
+                             :idx idx))
 
-                    (event [:Launchpad :control idx k]
+                    (event [:Launchpad :control k]
                            :val data2-f
                            :id k
                            :launchpad launchpad

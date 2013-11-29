@@ -36,10 +36,13 @@
 
 (defn command-right-active? [state x] (on? state x grid/side-btns))
 
+(defn session-mode? [state] (not= 0 (:session @state)))
+
 (defn reset! [state] (reset! state (empty)))
 
 (defn empty []
   {:active :up
+   :session 0
    :up     (grid/empty)
    :down   (grid/empty)
    :left   (grid/empty)
