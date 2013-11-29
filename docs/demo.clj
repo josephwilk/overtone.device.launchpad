@@ -143,7 +143,7 @@
     (fn [beat]
       (let [lp (first c/launchpad-kons)
             brightness (mod beat 4)]
-        (device/led-on  lp [7 7] brightness :amber)))
+        (device/led-on  lp :mixer brightness :amber)))
     beat-rep-key)
 
   ;; Think of this as the event loop for the grid, triggered on a beat
