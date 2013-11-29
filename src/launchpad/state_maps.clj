@@ -6,6 +6,7 @@
 (defn active-mode? [state candidate-mode] (= candidate-mode (mode state)))
 
 (defn active-grid [state] ((mode state) @state))
+(defn grid-index [state] (:grid-index @state))
 
 (defn toggle! [state x y]
   (let [new-grid (grid/toggle (active-grid state) x y)]
@@ -24,7 +25,7 @@
 (defn set [state x y value]
   (swap! state assoc (mode state) (grid/set (active-grid state) x y value)))
 
-(defn cell [state x y] (grid/cell (active-grid state) x y))
+(defn cell [state x y] (grid/cell (grid-index state) (active-grid state) x y))
 
 (defn row [state n] (grid/row (active-grid state) n))
 (defn column [state n] (grid/col (active-grid state) n))
@@ -40,6 +41,15 @@
 
 (defn reset! [state] (reset! state (empty)))
 
+(defn shift-left [state]
+  (let [active-mode (mode state)
+        index (grid-index state)]
+    (swap! state assoc active-mode (grid/shift-left (active-grid state)))
+    (swap! state assoc :grid-index [(inc (first index)) 0])))
+
+(defn shift-right [state]
+  (swap! state assoc :grid-index [(dec (first (grid-index state))) 0]))
+
 (defn empty []
   {:active :up
    :session 0
@@ -49,7 +59,8 @@
    :right  (grid/empty)
    :user1  (grid/empty)
    :user2  (grid/empty)
-   :fn-map (grid/fn-grid)})
+   :fn-map (grid/fn-grid)
+   :grid-index [0 0]})
 
 (comment
   (use '[launchpad.core] :reload)

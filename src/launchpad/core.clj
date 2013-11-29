@@ -40,13 +40,15 @@
 
   (e/on-event [:Launchpad :control :left]
               (fn [{lp :launchpad}]
-                (when-not (mode/session? lp)
+                (if (mode/session? lp)
+                  (state-maps/shift-left (:state lp))
                   (mode/trigger lp :left)))
               ::left-mode)
 
   (e/on-event [:Launchpad :control :right]
               (fn [{lp :launchpad}]
-                (when-not (mode/session? lp)
+                (if (mode/session? lp)
+                  (state-maps/shift-right (:state lp))
                   (mode/trigger lp :right)))
               ::right-mode)
 
