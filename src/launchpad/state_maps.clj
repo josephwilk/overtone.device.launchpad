@@ -47,9 +47,10 @@
 
 (defn shift-left [state]
   (let [active-mode (mode state)
-        index (grid-index state)]
-    (swap! state assoc active-mode (grid/shift-left (active-grid state)))
-    (swap! state assoc :grid-index [(dec (first index)) 0])
+        [x-pos y-pos] (grid-index state)]
+    (when (> x-pos 0)
+      (swap! state assoc active-mode (grid/shift-left (active-grid state)))
+      (swap! state assoc :grid-index [(dec x-pos) 0]))
     (println :index (grid-index state))))
 
 (defn shift-right [state]
