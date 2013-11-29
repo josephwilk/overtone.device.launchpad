@@ -39,16 +39,23 @@
               ::down-mode)
 
   (e/on-event [:Launchpad :control :left]
-              (fn [{lp :launchpad}]
-                (if (mode/session? lp)
+              (fn [{lp :launchpad val :val}]
+                (when (and (= 1.0 val) (mode/session? lp))
                   (state-maps/shift-left (:state lp))
+                  (device/render-grid lp))
+
+                (when-not (mode/session? lp)
                   (mode/trigger lp :left)))
               ::left-mode)
 
   (e/on-event [:Launchpad :control :right]
-              (fn [{lp :launchpad}]
-                (if (mode/session? lp)
+              (fn [{lp :launchpad val :val}]
+                (when (and (= 1.0 val) (mode/session? lp))
                   (state-maps/shift-right (:state lp))
+                  (device/render-grid lp))
+
+                (when-not (mode/session? lp)
+                  (state-maps/reset-position (:state lp))
                   (mode/trigger lp :right)))
               ::right-mode)
 

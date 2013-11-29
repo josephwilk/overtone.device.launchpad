@@ -30,6 +30,13 @@
                  (drop (x-offset 0 x-pos))
                  (take 8))) full-grid)))
 
+(defn project-page
+  ([full-grid] (project-page [0 0] full-grid))
+  ([[x-pos y-pos] full-grid]
+     (map-indexed
+      (fn [idx row] (concat row [(nth (nth full-grid idx) 8)]) )
+      (project-8x8 [x-pos y-pos] full-grid))))
+
 (defn side [full-grid] (map (fn [row] (nth row 8)) full-grid) )
 
 (defn toggle
@@ -40,6 +47,7 @@
             old-cell (nth old-row x-offset)
             new-row (assoc old-row x-offset (if (= 1 old-cell) 0 1))
             new-grid (assoc (vec grid) y new-row)]
+        (println :x x-offset :y y)
         new-grid)))
 
 (defn set
@@ -47,11 +55,18 @@
   ([[x-pos y-pos]  grid y x value]
       (let [old-row (-> grid (nth y) (vec))
             new-row (assoc old-row (x-offset x x-pos) value)]
+
+        (println :y y :x (x-offset x x-pos))
+
         (assoc (vec grid) y new-row))))
 
 (defn cell
   ([grid y x] (cell [0 0] grid y x))
-  ([[x-pos y-pos] grid y x] (-> grid (nth y) (nth (x-offset x x-pos)))))
+  ([[x-pos y-pos] grid y x]
+     (let [x-offset (x-offset x x-pos)]
+       (-> grid
+           (nth y)
+           (nth x-offset)))))
 
 (defn on?
   ([grid y x] (on? [0 0] grid y x))
@@ -72,7 +87,10 @@
           (drop (x-offset 0 x-pos))
           (take (x-offset 8 x-pos)))))
 
-(defn col [grid n] (map #(nth % n) grid))
+(defn col
+  ([grid n] (col [0 0] grid n))
+  ([[x-pos y-pos] grid n]
+     (map #(nth % (x-offset n x-pos)) grid)))
 
 (defn shift-left [grid]
   (map #(concat % [0 0 0 0 0 0 0 0]) grid))

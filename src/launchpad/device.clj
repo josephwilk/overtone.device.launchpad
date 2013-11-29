@@ -162,7 +162,9 @@
       (toggle-led launchpad [row y] (grid/cell grid row y)))))
 
 (defn render-grid [launchpad]
-  (let [grid (state-maps/active-grid (:state launchpad))]
+  (let [grid (grid/project-page (state-maps/grid-index (:state launchpad)) (state-maps/active-grid (:state launchpad)))]
+    (println :grid grid)
+
     (doseq [[x row] (map vector (iterate inc 0) grid)
             [y cell] (map vector (iterate inc 0) row)]
       (toggle-led launchpad [x y] cell))))
