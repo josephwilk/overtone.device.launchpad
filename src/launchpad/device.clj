@@ -249,7 +249,7 @@
             note      (:note v)
             on-handle (concat device-key [type note])
             on-fn (fn [{:keys [data2-f]}]
-                    (if (zero? (:val data2-f))
+                    (if (zero? data2-f)
                       (event [:Launchpad :control (str k "-off")]
                              :val data2-f
                              :id k
