@@ -20,7 +20,7 @@
       (device/led-off launchpad mode)
       (swap! (:state launchpad) assoc mode 0))
     (do
-      (device/led-on launchpad mode 3 :amber)
+      (device/led-on launchpad mode 3 :yellow)
       (swap! (:state launchpad) assoc mode 1))))
 
 (defn session? [lp]

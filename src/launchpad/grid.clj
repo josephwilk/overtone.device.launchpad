@@ -5,6 +5,7 @@
 (def side-btns 8)
 
 (def grid-width 8)
+(def page-width 9)
 
 (defn empty []
   [[0 0 0 0 0 0 0 0 0]
@@ -17,10 +18,7 @@
    [0 0 0 0 0 0 0 0 0]])
 
 (defn x-offset [x x-pos]
-  (if (zero? x-pos)
-    (+ x (* x-pos grid-width))
-    (+ x 1 (* x-pos grid-width)) ;; + 1 for the right btns
-    ))
+  (+ x (* x-pos page-width)))
 
 (defn project-8x8
   ([full-grid] (project-8x8 [0 0] full-grid))
@@ -28,16 +26,20 @@
      (map (fn [row]
             (->> row
                  (drop (x-offset 0 x-pos))
-                 (take 8))) full-grid)))
+                 (take grid-width)))
+          full-grid)))
 
 (defn project-page
   ([full-grid] (project-page [0 0] full-grid))
   ([[x-pos y-pos] full-grid]
-     (map-indexed
-      (fn [idx row] (concat row [(nth (nth full-grid idx) 8)]) )
-      (project-8x8 [x-pos y-pos] full-grid))))
+     (map (fn [row]
+            (->> row
+                 (drop (x-offset 0 x-pos))
+                 (take page-width)))
+      full-grid
+      )))
 
-(defn side [full-grid] (map (fn [row] (nth row 8)) full-grid) )
+(defn side [full-grid] (map (fn [row] (nth row side-btns)) full-grid) )
 
 (defn toggle
   ([grid y x] (toggle [0 0] grid y x))
@@ -47,7 +49,6 @@
             old-cell (nth old-row x-offset)
             new-row (assoc old-row x-offset (if (= 1 old-cell) 0 1))
             new-grid (assoc (vec grid) y new-row)]
-        (println :x x-offset :y y)
         new-grid)))
 
 (defn set
@@ -55,9 +56,6 @@
   ([[x-pos y-pos]  grid y x value]
       (let [old-row (-> grid (nth y) (vec))
             new-row (assoc old-row (x-offset x x-pos) value)]
-
-        (println :y y :x (x-offset x x-pos))
-
         (assoc (vec grid) y new-row))))
 
 (defn cell
@@ -77,7 +75,7 @@
   ([[x-pos y-pos] grid n]
      (->
       (drop (x-offset 0 x-pos))
-      (take (x-offset 8 x-pos))
+      (take (x-offset page-width x-pos))
       (nth grid n))))
 
 (defn grid-row
@@ -85,7 +83,7 @@
   ([[x-pos y-pos] grid n]
      (->> (nth grid n)
           (drop (x-offset 0 x-pos))
-          (take (x-offset 8 x-pos)))))
+          (take (x-offset grid-width x-pos)))))
 
 (defn col
   ([grid n] (col [0 0] grid n))
@@ -93,4 +91,4 @@
      (map #(nth % (x-offset n x-pos)) grid)))
 
 (defn shift-left [grid]
-  (map #(concat % [0 0 0 0 0 0 0 0]) grid))
+  (map #(concat % (take page-width (repeat 0))) grid))

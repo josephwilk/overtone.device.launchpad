@@ -46,16 +46,17 @@
 (defn reset-position [state] (swap! state assoc :grid-index [0 0]))
 
 (defn shift-left [state]
-  (let [active-mode (mode state)
-        [x-pos y-pos] (grid-index state)]
+  (let [[x-pos y-pos] (grid-index state)]
     (when (> x-pos 0)
-      (swap! state assoc active-mode (grid/shift-left (active-grid state)))
-      (swap! state assoc :grid-index [(dec x-pos) 0]))
-    (println :index (grid-index state))))
+      (swap! state assoc :grid-index [(dec x-pos) 0]))))
 
 (defn shift-right [state]
-  (swap! state assoc :grid-index [(inc (first (grid-index state))) 0])
-  (println :index (grid-index state)))
+  (let [active-mode (mode state)
+        [x-pos y-pos] (grid-index state)
+        current-grid-size (int (/ (count (first (active-grid state))) grid/page-width))]
+    (when (>= (inc x-pos) current-grid-size)
+      (swap! state assoc active-mode (grid/shift-left (active-grid state)))))
+  (swap! state assoc :grid-index [(inc (first (grid-index state))) 0]))
 
 (defn empty []
   {:active :up
