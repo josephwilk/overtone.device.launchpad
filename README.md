@@ -84,7 +84,7 @@ lein repl
 (load-file "docs/demo.clj")
 ```
 
-## Overtone and Launchpad in action
+## Show my Overtone and Launchpad in action!
 
 * http://youtu.be/0On-UHcK4s0
 * http://youtu.be/BFZ0vo4QUA0
