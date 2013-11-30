@@ -58,6 +58,11 @@
       (swap! state assoc active-mode (grid/shift-left (active-grid state)))))
   (swap! state assoc :grid-index [(inc (first (grid-index state))) 0]))
 
+(defn complete-grid-row
+  "Return a single row spanning all dimensions"
+  [state y]
+  (grid/complete-grid-row (active-grid state) y))
+
 (defn empty []
   {:active :up
    :session 0

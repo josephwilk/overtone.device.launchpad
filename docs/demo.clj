@@ -96,12 +96,15 @@
 (do
   (require '[launchpad.state-maps :as state-maps])
   (require '[launchpad.device :as device])
+  (require '[launchpad.grid :as grid])
   (require '[launchpad.core :as c])
   (require '[overtone.synth.timing :as timing])
   (use '[overtone.helpers.lib :only [uuid]])
   (use 'launchpad.sequencer)
 
   (def lp (first launchpad-kons))
+
+  (def phrase-size 16)
 
   (defonce count-trig-id (trig-id))
 
@@ -131,14 +134,14 @@
 
   (def all-samples [kick-s click-s boom-s subby-s choir-s godzilla-s outiuty-s])
 
-  (def lp-sequencer (mk-sequencer "launchpad-sequencer" all-samples 8 beat-cnt-bus beat-trg-bus 0))
+  (def lp-sequencer (mk-sequencer "launchpad-sequencer" all-samples phrase-size beat-cnt-bus beat-trg-bus 0))
 
   (def refresh-beat-key (uuid))
   (def beat-rep-key (uuid))
 
   (defonce get-beat-s (get-beat))
 
-  ;; Use 7x7 cell to display beat
+  ;; Use :mixer cell to display beat
   (on-trigger count-trig-id
     (fn [beat]
       (let [lp (first c/launchpad-kons)
@@ -150,8 +153,8 @@
   (on-trigger count-trig-id
     (fn [beat]
       (when (state-maps/active-mode? (:state lp) :up)
-        (let [current-row (mod (dec beat) 8)
-              last-row (mod (- beat 2) 8)
+        (let [current-row (mod (dec beat) phrase-size)
+              last-row (mod (- beat 2) phrase-size)
               col (state-maps/column (:state lp) current-row)
               last-col (state-maps/column (:state lp) last-row)]
 
@@ -160,12 +163,12 @@
           (when (= current-row 7.0)
             (doseq [idx (range 6)]
               (when (state-maps/command-right-active? (:state lp) idx)
-                (sequencer-write! lp-sequencer idx (state-maps/grid-row (:state lp) idx)))))
+                (sequencer-write! lp-sequencer idx (state-maps/complete-grid-row (:state lp) idx)))))
 
-          (doseq [r (range 0 8)]
+          (doseq [r (range 0 grid/grid-width)]
             (when (state-maps/command-right-active? (:state lp) r)
               (if (= 1 (nth last-col r))
-                (device/led-on lp [r last-row] 1 :green)
+                (device/led-on lp [r last-row] 2 :green)
                 (device/led-off lp [r last-row]))
 
               (if (= 1 (nth col r))

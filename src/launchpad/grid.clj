@@ -78,6 +78,11 @@
       (take (x-offset page-width x-pos))
       (nth grid n))))
 
+(defn complete-grid-row [grid n]
+  (mapcat
+   drop-last
+   (split-at page-width (nth grid n))))
+
 (defn grid-row
   ([grid n] (grid-row [0 0] grid n))
   ([[x-pos y-pos] grid n]
