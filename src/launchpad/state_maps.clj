@@ -59,7 +59,7 @@
   (swap! state assoc :grid-index [(inc (first (grid-index state))) 0]))
 
 (defn complete-grid-row
-  "Return a single row spanning all dimensions"
+  "Return a single row y spanning all dimensions"
   [state y]
   (grid/complete-grid-row (active-grid state) y))
 

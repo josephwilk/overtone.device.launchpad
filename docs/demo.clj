@@ -153,28 +153,31 @@
   (on-trigger count-trig-id
     (fn [beat]
       (when (state-maps/active-mode? (:state lp) :up)
-        (let [current-row (mod (dec beat) phrase-size)
+        (let [current-row (int (mod (dec beat) phrase-size))
               last-row (mod (- beat 2) phrase-size)
               col (state-maps/column (:state lp) current-row)
               last-col (state-maps/column (:state lp) last-row)]
 
           ;;Refresh new patterns just before beat 0
           ;;Ensures new patterns start on beat
-          (when (= (int current-row) (dec phase-size))
-            (doseq [idx (range 6)]
+          (when (= current-row (dec phrase-size))
+            (doseq [idx (range grid/grid-height)]
               (when (state-maps/command-right-active? (:state lp) idx)
                 (sequencer-write! lp-sequencer idx (state-maps/complete-grid-row (:state lp) idx)))))
 
           (doseq [r (range 0 grid/grid-width)]
             (when (state-maps/command-right-active? (:state lp) r)
-              (if (= 1 (nth last-col r))
-                (device/led-on lp [r last-row] 2 :green)
-                (device/led-off lp [r last-row]))
 
-              (if (= 1 (nth col r))
-                (when (= 1.0 (nth (sequencer-pattern lp-sequencer r) current-row))
-                  (device/led-on lp  [r current-row] 3 :green))
-                (device/led-on lp  [r current-row] 1 :amber)))))))
+              (when (seq last-col)
+                (if (= 1 (nth last-col r))
+                  (device/led-on lp [r last-row] 2 :green)
+                  (device/led-off lp [r last-row])))
+
+              (when (seq col)
+                (if (= 1 (nth col r))
+                  (when (= 1.0 (nth (sequencer-pattern lp-sequencer r) current-row))
+                    (device/led-on lp  [r current-row] 3 :green))
+                  (device/led-on lp  [r current-row] 1 :amber))))))))
     refresh-beat-key)
 
   (defn toggle-row [lp idx]

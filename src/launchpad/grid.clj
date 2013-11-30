@@ -5,6 +5,9 @@
 (def side-btns 8)
 
 (def grid-width 8)
+(def grid-height 8)
+
+;;A page includes side btn
 (def page-width 9)
 
 (defn empty []
@@ -91,9 +94,9 @@
           (take (x-offset grid-width x-pos)))))
 
 (defn col
-  ([grid n] (col [0 0] grid n))
-  ([[x-pos y-pos] grid n]
-     (map #(nth % (x-offset n x-pos)) grid)))
+  ([grid x] (col [0 0] grid x))
+  ([[x-pos y-pos] grid x]
+     (map #(nth % (x-offset x x-pos)) grid)))
 
 (defn shift-left [grid]
   (map #(concat % (take page-width (repeat 0))) grid))
