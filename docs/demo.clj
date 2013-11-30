@@ -160,7 +160,7 @@
 
           ;;Refresh new patterns just before beat 0
           ;;Ensures new patterns start on beat
-          (when (= current-row 7.0)
+          (when (= (int current-row) (dec phase-size))
             (doseq [idx (range 6)]
               (when (state-maps/command-right-active? (:state lp) idx)
                 (sequencer-write! lp-sequencer idx (state-maps/complete-grid-row (:state lp) idx)))))
