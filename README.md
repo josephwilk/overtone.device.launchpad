@@ -17,10 +17,11 @@ https://clojars.org/launchpad
 Launchpad works through an evented system. While you can do anything with those events `launchpad.core` setups some
 useful defaults:
 
-* All top control buttons except user1/2
+* When :session mode is lit allows infinte scrolling left or right (for greater than 8 phrases)
+* All top control buttons except :user1 / :user2 & :session
   * Enter mode where each grid remembers keys pressed.
   * Grid buttons simply toggle state/light on/off.
-* user1 & user2:
+* :user1 & :user2
   * Enter mode where there is no persistent grid state.
   * Grid buttons trigger led/fn key-down and off with key-up
 
