@@ -42,6 +42,7 @@
       full-grid
       )))
 
+(defn side? [x] (not= grid-width (mod x (inc grid-width))))
 (defn side [full-grid] (map (fn [row] (nth row side-btns)) full-grid) )
 
 (defn toggle

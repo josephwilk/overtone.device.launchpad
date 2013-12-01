@@ -153,31 +153,30 @@
   (on-trigger count-trig-id
     (fn [beat]
       (when (state-maps/active-mode? (:state lp) :up)
-        (let [current-row (int (mod (dec beat) phrase-size))
-              last-row (mod (- beat 2) phrase-size)
-              col (state-maps/column (:state lp) current-row)
-              last-col (state-maps/column (:state lp) last-row)]
+        (let [current-x (int (mod (dec beat) phrase-size))
+              previous-x (int (mod (- beat 2) phrase-size))
+              col (state-maps/column (:state lp) current-x)
+              last-col (state-maps/column (:state lp) previous-x)]
 
           ;;Refresh new patterns just before beat 0
           ;;Ensures new patterns start on beat
-          (when (= current-row (dec phrase-size))
+          (when (= current-x (dec phrase-size))
             (doseq [idx (range grid/grid-height)]
               (when (state-maps/command-right-active? (:state lp) idx)
                 (sequencer-write! lp-sequencer idx (state-maps/complete-grid-row (:state lp) idx)))))
 
           (doseq [r (range 0 grid/grid-width)]
             (when (state-maps/command-right-active? (:state lp) r)
-
-              (when (seq last-col)
+              (when (and (seq last-col) (not (grid/side? previous-x)))
                 (if (= 1 (nth last-col r))
-                  (device/led-on lp [r last-row] 2 :green)
-                  (device/led-off lp [r last-row])))
+                  (device/led-on lp [r previous-x] 2 :green)
+                  (device/led-off lp [r previous-x])))
 
-              (when (seq col)
+              (when (and (seq col) (not (grid/side? current-x)))
                 (if (= 1 (nth col r))
-                  (when (= 1.0 (nth (sequencer-pattern lp-sequencer r) current-row))
-                    (device/led-on lp  [r current-row] 3 :green))
-                  (device/led-on lp  [r current-row] 1 :amber))))))))
+                  (when (= 1 (nth (sequencer-pattern lp-sequencer r) current-x))
+                    (device/led-on lp  [r current-x] 3 :green))
+                  (device/led-on lp  [r current-x] 1 :amber))))))))
     refresh-beat-key)
 
   (defn toggle-row [lp idx]
