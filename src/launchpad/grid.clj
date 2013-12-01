@@ -96,7 +96,8 @@
 (defn col
   ([grid x] (col [0 0] grid x))
   ([[x-pos y-pos] grid x]
-     (map #(nth % (x-offset x x-pos)) grid)))
+     (when (< x (count (first grid)))
+       (map #(nth % (x-offset x x-pos)) grid))))
 
 (defn shift-left [grid]
   (map #(concat % (take page-width (repeat 0))) grid))
