@@ -5,7 +5,8 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [overtone "0.9.1"]
-                 [overtone/at-at "1.2.0"]]
+                 [overtone/at-at "1.2.0"]
+                 [slingshot "0.10.3"]]
 
   :profiles {:dev {:dependencies [[midje "1.5.1"]]
                    :plugins      [[lein-midje "3.0.1"]

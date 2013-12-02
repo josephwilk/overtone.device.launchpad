@@ -1,7 +1,7 @@
 (ns launchpad.core
   (:use
    [overtone.live]
-   [overtone.inst.drum])
+   [slingshot.slingshot  :only [throw+]])
   (:require
    [overtone.studio.midi :as midi]
    [overtone.libs.event  :as e]
@@ -17,6 +17,9 @@
   (defonce launchpad-connected-devices   (midi/midi-find-connected-devices "Launchpad"))
   (defonce launchpad-stateful-devices    (map device/stateful-launchpad launchpad-connected-devices))
   (defonce launchpad-kons                (device/merge-launchpad-kons launchpad-connected-receivers launchpad-stateful-devices))
+
+  (when (empty? launchpad-kons)
+    (throw+ {:type ::LaunchpadNotFound :hint "No Launchpad connected. Is it plugged in?"}))
 
   (defn bind
     "For a specific mode bind a grid cell key press to a function.
