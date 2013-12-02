@@ -94,16 +94,15 @@
 
 ;;Use LED row sequences to indicate when beats strike
 (do
+  (require '[launchpad.plugin.beat :as beat])
+
   (require '[launchpad.state-maps :as state-maps])
   (require '[launchpad.device :as device])
-  (require '[launchpad.grid :as grid])
-  (require '[launchpad.core :as c])
   (require '[overtone.synth.timing :as timing])
   (use '[overtone.helpers.lib :only [uuid]])
   (use 'launchpad.sequencer)
 
   (def lp (first launchpad-kons))
-
   (def phrase-size 16)
 
   (defonce count-trig-id (trig-id))
@@ -151,50 +150,16 @@
 
   ;; Think of this as the event loop for the grid, triggered on a beat
   (on-trigger count-trig-id
-    (fn [beat]
-      (when (state-maps/active-mode? (:state lp) :up)
-        (let [current-x (int (mod (dec beat) phrase-size))
-              previous-x (int (mod (- beat 2) phrase-size))
-              col (state-maps/grid-column (:state lp) current-x)
-              last-col (state-maps/grid-column (:state lp) previous-x)]
+              (beat/grid-refresh lp lp-sequencer phrase-size)
+              refresh-beat-key)
 
-          (when-not (state-maps/session-mode? (:state lp))
-            (state-maps/set-position (:state lp) (int (/ current-x 8)))
-            (device/render-row lp 0 1 :green))
-
-          ;;Refresh new patterns just before beat 0
-          ;;Ensures new patterns start on beat
-          (when (= current-x (dec phrase-size))
-            (doseq [idx (range grid/grid-height)]
-              (when (state-maps/command-right-active? (:state lp) idx [0 0])
-                (sequencer-write! lp-sequencer idx (take phrase-size (state-maps/complete-grid-row (:state lp) idx))))))
-
-          (doseq [r (range 0 grid/grid-width)]
-            (when (state-maps/command-right-active? (:state lp) r [0 0])
-              (when (seq last-col)
-                (if (= 1 (nth last-col r))
-                  (device/led-on lp [r (mod previous-x 8)] 2 :green)
-                  (device/led-off lp [r (mod previous-x 8)])))
-
-              (when (seq col)
-                (if (= 1 (nth col r))
-                  (when (= 1 (int (nth (sequencer-pattern lp-sequencer r) current-x)))
-                    (device/led-on lp  [r (mod current-x 8)] 3 :green))
-                  (device/led-on lp  [r (mod current-x 8)] 1 :amber))))))))
-    refresh-beat-key)
-
-  (defn toggle-row [lp idx]
-    (when-not (state-maps/command-right-active? (:state lp) idx [0 0])
-      (reset-pattern! lp-sequencer idx)
-      (device/render-row lp idx)))
-
-  (bind :up :vol   (fn [lp] (toggle-row lp 0)))
-  (bind :up :pan   (fn [lp] (toggle-row lp 1)))
-  (bind :up :snda  (fn [lp] (toggle-row lp 2)))
-  (bind :up :sndb  (fn [lp] (toggle-row lp 3)))
-  (bind :up :stop  (fn [lp] (toggle-row lp 4)))
-  (bind :up :trkon (fn [lp] (toggle-row lp 5)))
-  (bind :up :solo  (fn [lp] (toggle-row lp 6)))
+  (bind :up :vol   (fn [lp] (beat/toggle-row lp lp-sequencer 0)))
+  (bind :up :pan   (fn [lp] (beat/toggle-row lp lp-sequencer 1)))
+  (bind :up :snda  (fn [lp] (beat/toggle-row lp lp-sequencer 2)))
+  (bind :up :sndb  (fn [lp] (beat/toggle-row lp lp-sequencer 3)))
+  (bind :up :stop  (fn [lp] (beat/toggle-row lp lp-sequencer 4)))
+  (bind :up :trkon (fn [lp] (beat/toggle-row lp lp-sequencer 5)))
+  (bind :up :solo  (fn [lp] (beat/toggle-row lp lp-sequencer 6)))
 
   ;;Adjust bpm
   (bind :up :7x6 (fn [] (ctl b-trg :div (swap! current-beat inc))))

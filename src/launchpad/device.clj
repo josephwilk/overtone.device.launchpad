@@ -165,11 +165,13 @@
         (doseq [y (range 0 8)]
           (toggle-led launchpad [row y] (grid/cell grid row y) intensity color)))))
 
-(defn render-grid [launchpad]
-  (let [page (state-maps/active-page (:state launchpad))]
-    (doseq [[x row] (map vector (iterate inc 0) page)
-            [y cell] (map vector (iterate inc 0) row)]
-      (toggle-led launchpad [x y] cell))))
+(defn render-grid
+  ([launchpad] (render-grid launchpad 3 :amber))
+  ([launchpad intensity color]
+      (let [page (state-maps/active-page (:state launchpad))]
+        (doseq [[x row] (map vector (iterate inc 0) page)
+                [y cell] (map vector (iterate inc 0) row)]
+          (toggle-led launchpad [x y] cell intensity color)))))
 
 (defn turn-flashing-on  [rcvr] (midi-control rcvr 0 40))
 (defn turn-flashing-off [rcvr] (midi-control rcvr 0 32))
