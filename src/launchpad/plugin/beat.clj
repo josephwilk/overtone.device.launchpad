@@ -1,4 +1,8 @@
 (ns launchpad.plugin.beat
+  "Use LEDS in a row to express points beat should strike.
+   When playing while scroll through > 8 phrase beats. Either
+   edit beats live as they play or switch to session mode and
+    edit each grid."
   (:use [launchpad.sequencer])
   (:require
    [launchpad.state-maps :as state-maps]
