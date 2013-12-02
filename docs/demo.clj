@@ -171,10 +171,9 @@
 
           (doseq [r (range 0 grid/grid-width)]
             (when (state-maps/command-right-active? (:state lp) r [0 0])
-              (println :last-col last-col :col col :r r)
               (when (seq last-col)
                 (if (= 1 (nth last-col r))
-                  (device/led-on lp [r (mod previous-x 8)] 1 :green)
+                  (device/led-on lp [r (mod previous-x 8)] 2 :green)
                   (device/led-off lp [r (mod previous-x 8)])))
 
               (when (seq col)
