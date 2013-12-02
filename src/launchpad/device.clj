@@ -37,7 +37,7 @@
    (range 96 105)
    (range 112 121)])
 
-(defn- coordinate->note [x y] (grid/cell grid-notes x y))
+(defn- coordinate->note [x y] (grid/cell [0 0] grid-notes x y))
 
 (def launchpad-config
   {:name "Launchpad S"
@@ -148,22 +148,26 @@
       (let [rcvr (-> launchpad :rcv)]
         (led-on* rcvr id brightness color))))
 
-(defn toggle-led [launchpad id cell]
-  (if-not (= 0 cell)
-    (led-on launchpad id)
-    (led-off launchpad id)))
+(defn toggle-led
+  ([launchpad id cell] (toggle-led launchpad id cell full-brightness :amber))
+  ([launchpad id cell intensity color]
+     (if-not (= 0 cell)
+       (led-on launchpad id intensity color)
+       (led-off launchpad id))))
 
 (defn command-right-leds-all-off [lp]
   (doseq [row (range 0 8)] (led-off lp [row 8])))
 
-(defn render-row [launchpad row]
-  (let [grid (state-maps/active-grid (:state launchpad))]
-    (doseq [y (range 0 8)]
-      (toggle-led launchpad [row y] (grid/cell grid row y)))))
+(defn render-row
+  ([launchpad row] (render-row launchpad row 3 :amber))
+  ([launchpad row intensity color]
+      (let [grid (state-maps/active-page (:state launchpad))]
+        (doseq [y (range 0 8)]
+          (toggle-led launchpad [row y] (grid/cell grid row y) intensity color)))))
 
 (defn render-grid [launchpad]
-  (let [grid (state-maps/active-grid )]
-    (doseq [[x row] (map vector (iterate inc 0) grid)
+  (let [page (state-maps/active-page (:state launchpad))]
+    (doseq [[x row] (map vector (iterate inc 0) page)
             [y cell] (map vector (iterate inc 0) row)]
       (toggle-led launchpad [x y] cell))))
 

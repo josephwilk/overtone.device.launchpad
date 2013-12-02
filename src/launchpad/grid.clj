@@ -43,7 +43,17 @@
       )))
 
 (defn side? [x] (not= grid-width (mod x (inc grid-width))))
+
 (defn side [full-grid] (map (fn [row] (nth row side-btns)) full-grid) )
+
+(defn grid-column
+  "Direct access into the grid irrelevant of grid-index"
+  [grid x]
+  (let [grid-x (cond
+                (>= x grid-width) (int (+ (/ x grid-width) x))
+                true x)]
+    (when (< grid-x (count (first grid)))
+      (map #(nth % grid-x) grid))))
 
 (defn toggle
   ([grid y x] (toggle [0 0] grid y x))
@@ -82,10 +92,10 @@
       (take (x-offset page-width x-pos))
       (nth grid n))))
 
-(defn complete-grid-row [grid n]
+(defn complete-grid-row [grid y]
   (mapcat
    drop-last
-   (split-at page-width (nth grid n))))
+   (split-at page-width (nth grid y))))
 
 (defn grid-row
   ([grid n] (grid-row [0 0] grid n))
@@ -97,8 +107,9 @@
 (defn col
   ([grid x] (col [0 0] grid x))
   ([[x-pos y-pos] grid x]
-     (when (< x (count (first grid)))
-       (map #(nth % (x-offset x x-pos)) grid))))
+     (let [x-offset (x-offset x x-pos)]
+       (when (< x-offset (count (first grid)))
+         (map #(nth % x-offset) grid)))))
 
 (defn shift-left [grid]
   (map #(concat % (take page-width (repeat 0))) grid))

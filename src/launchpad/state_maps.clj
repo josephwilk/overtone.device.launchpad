@@ -6,7 +6,10 @@
 
 (defn active-mode? [state candidate-mode] (= candidate-mode (mode state)))
 
-(defn active-grid [state] (grid/project-page ((mode state) @state)))
+(defn active-grid [state] ((mode state) @state))
+
+(defn active-page [state]
+  (grid/project-page (grid-index state)(active-grid state)))
 
 (defn toggle! [state x y]
   (let [new-grid (grid/toggle (grid-index state) (active-grid state) x y)]
@@ -19,7 +22,9 @@
 
 (defn toggle-side! [state x] (toggle! state x grid/side-btns))
 
-(defn on? [state x y] (grid/on? (grid-index state) (active-grid state) x y))
+(defn on?
+  ([state x y] (on? state x y (grid-index state)))
+  ([state x y grid-index] (grid/on? grid-index (active-grid state) x y)))
 
 (defn grid-row [state n] (grid/grid-row (grid-index state) (active-grid state) n))
 
@@ -31,18 +36,23 @@
 (defn row [state n] (grid/row (grid-index state) (active-grid state) n))
 (defn column [state n] (grid/col (grid-index state) (active-grid state) n))
 
+(defn grid-column [state n] (grid/grid-column (active-grid state) n))
+
 (defn column-off [state col]
   (let [grid (active-grid state)
         new-grid (reduce (fn [new-grid row] (grid/set (grid-index state) new-grid row col 0)) grid (range 0 8))]
     (swap! state assoc (mode state) new-grid)))
 
-(defn command-right-active? [state x] (on? state x grid/side-btns))
+(defn command-right-active?
+  ([state x] (command-right-active? state x (grid-index state)))
+  ([state x grid-index] (on? state x grid/side-btns grid-index)))
 
 (defn session-mode? [state] (not= 0 (:session @state)))
 
 (defn reset! [state] (reset! state (empty)))
 
 (defn reset-position [state] (swap! state assoc :grid-index [0 0]))
+(defn set-position [state x] (swap! state assoc :grid-index [x 0]))
 
 (defn shift-left [state]
   (let [[x-pos y-pos] (grid-index state)]

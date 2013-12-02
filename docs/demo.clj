@@ -155,32 +155,37 @@
       (when (state-maps/active-mode? (:state lp) :up)
         (let [current-x (int (mod (dec beat) phrase-size))
               previous-x (int (mod (- beat 2) phrase-size))
-              col (state-maps/column (:state lp) current-x)
-              last-col (state-maps/column (:state lp) previous-x)]
+              col (state-maps/grid-column (:state lp) current-x)
+              last-col (state-maps/grid-column (:state lp) previous-x)]
+
+          (when-not (state-maps/session-mode? (:state lp))
+            (state-maps/set-position (:state lp) (int (/ current-x 8)))
+            (device/render-row lp 0 1 :green))
 
           ;;Refresh new patterns just before beat 0
           ;;Ensures new patterns start on beat
           (when (= current-x (dec phrase-size))
             (doseq [idx (range grid/grid-height)]
-              (when (state-maps/command-right-active? (:state lp) idx)
-                (sequencer-write! lp-sequencer idx (state-maps/complete-grid-row (:state lp) idx)))))
+              (when (state-maps/command-right-active? (:state lp) idx [0 0])
+                (sequencer-write! lp-sequencer idx (take phrase-size (state-maps/complete-grid-row (:state lp) idx))))))
 
           (doseq [r (range 0 grid/grid-width)]
-            (when (state-maps/command-right-active? (:state lp) r)
-              (when (and (seq last-col) (not (grid/side? previous-x)))
+            (when (state-maps/command-right-active? (:state lp) r [0 0])
+              (println :last-col last-col :col col :r r)
+              (when (seq last-col)
                 (if (= 1 (nth last-col r))
-                  (device/led-on lp [r previous-x] 2 :green)
-                  (device/led-off lp [r previous-x])))
+                  (device/led-on lp [r (mod previous-x 8)] 1 :green)
+                  (device/led-off lp [r (mod previous-x 8)])))
 
-              (when (and (seq col) (not (grid/side? current-x)))
+              (when (seq col)
                 (if (= 1 (nth col r))
-                  (when (= 1 (nth (sequencer-pattern lp-sequencer r) current-x))
-                    (device/led-on lp  [r current-x] 3 :green))
-                  (device/led-on lp  [r current-x] 1 :amber))))))))
+                  (when (= 1 (int (nth (sequencer-pattern lp-sequencer r) current-x)))
+                    (device/led-on lp  [r (mod current-x 8)] 3 :green))
+                  (device/led-on lp  [r (mod current-x 8)] 1 :amber))))))))
     refresh-beat-key)
 
   (defn toggle-row [lp idx]
-    (when-not (state-maps/command-right-active? (:state lp) idx)
+    (when-not (state-maps/command-right-active? (:state lp) idx [0 0])
       (reset-pattern! lp-sequencer idx)
       (device/render-row lp idx)))
 
