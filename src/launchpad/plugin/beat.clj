@@ -38,15 +38,16 @@
             (when (state-maps/command-right-active? (:state lp) idx [0 0])
               (sequencer-write! lp-sequencer idx (take phrase-size (state-maps/complete-grid-row (:state lp) idx))))))
 
-        (doseq [r (range 0 grid/grid-width)]
-          (when (state-maps/command-right-active? (:state lp) r [0 0])
-            (when (seq last-col)
-              (if (= 1 (nth last-col r))
-                (device/led-on lp [r (mod previous-x 8)] 2 :green)
-                (device/led-off lp [r (mod previous-x 8)])))
+        (when-not (state-maps/session-mode? (:state lp))
+          (doseq [r (range 0 grid/grid-width)]
+            (when (state-maps/command-right-active? (:state lp) r [0 0])
+              (when (seq last-col)
+                (if (= 1 (nth last-col r))
+                  (device/led-on lp [r (mod previous-x 8)] 2 :green)
+                  (device/led-off lp [r (mod previous-x 8)])))
 
-            (when (seq col)
-              (if (= 1 (nth col r))
-                (when (= 1 (int (nth (sequencer-pattern lp-sequencer r) current-x)))
-                  (device/led-on lp  [r (mod current-x 8)] 3 :green))
-                (device/led-on lp  [r (mod current-x 8)] 1 :amber)))))))))
+              (when (seq col)
+                (if (= 1 (nth col r))
+                  (when (= 1 (int (nth (sequencer-pattern lp-sequencer r) current-x)))
+                    (device/led-on lp  [r (mod current-x 8)] 3 :green))
+                  (device/led-on lp  [r (mod current-x 8)] 1 :amber))))))))))
