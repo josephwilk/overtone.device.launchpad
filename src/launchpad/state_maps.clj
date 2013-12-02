@@ -1,13 +1,12 @@
 (ns launchpad.state-maps
   (:require [launchpad.grid :as grid]))
 
-(defn mode [state] (:active @state))
+(defn mode       [state] (:active @state))
+(defn grid-index [state] (:grid-index @state))
 
 (defn active-mode? [state candidate-mode] (= candidate-mode (mode state)))
 
-(defn active-grid [state] ((mode state) @state))
-
-(defn grid-index [state] (:grid-index @state))
+(defn active-grid [state] (grid/project-page ((mode state) @state)))
 
 (defn toggle! [state x y]
   (let [new-grid (grid/toggle (grid-index state) (active-grid state) x y)]
