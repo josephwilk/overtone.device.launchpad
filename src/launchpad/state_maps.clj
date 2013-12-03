@@ -9,7 +9,7 @@
 (defn active-grid [state] ((mode state) @state))
 
 (defn active-page [state]
-  (grid/project-page (grid-index state)(active-grid state)))
+  (grid/project-page (grid-index state) (active-grid state)))
 
 (defn toggle! [state x y]
   (let [new-grid (grid/toggle (grid-index state) (active-grid state) x y)]

@@ -156,7 +156,7 @@
        (led-off launchpad id))))
 
 (defn command-right-leds-all-off [lp]
-  (doseq [row (range 0 8)] (led-off lp [row 8])))
+  (doseq [row (range 0 grid/grid-width)] (led-off lp [row grid/side-btns])))
 
 (defn render-row
   ([launchpad row] (render-row launchpad row 3 :amber))
@@ -185,10 +185,10 @@
                  start-lag (rand-int 1000)]
              (Thread/sleep start-lag)
              (doseq [intensity (range 1 4)]
-               (doseq [row (range 0 8)]
                  (led-on* rcvr [row col] intensity :red)
                  (Thread/sleep (- refresh row))))))
          (range 0 8)))
+                 (doseq [row (range 0 grid/grid-width)]
   (midi-control rcvr all-lights 127)
   (Thread/sleep 400)
   (doseq [row (reverse (range 0 8))]
