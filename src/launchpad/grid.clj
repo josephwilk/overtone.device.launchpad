@@ -35,12 +35,13 @@
 (defn project-page
   ([full-grid] (project-page [0 0] full-grid))
   ([[x-pos y-pos] full-grid]
-     (map (fn [row]
-            (->> row
-                 (drop (x-offset 0 x-pos))
-                 (take page-width)))
-      full-grid
-      )))
+     (remove nil?
+             (map (fn [row]
+                    (->> row
+                         (drop (x-offset 0 x-pos))
+                         (take page-width)
+                         seq))
+                  full-grid))))
 
 (defn side? [x] (not= grid-width (mod x (inc grid-width))))
 
