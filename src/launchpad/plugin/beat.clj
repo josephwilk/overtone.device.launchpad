@@ -10,6 +10,12 @@
    [launchpad.device :as device]
    [launchpad.grid :as grid]))
 
+(defn shutdown [lp lp-sequencer]
+  (reset-all-patterns! lp-sequencer)
+  (state-maps/column-off (:state lp) 8)
+  (device/command-right-leds-all-off lp)
+  (device/render-grid lp))
+
 (defn toggle-row [lp lp-sequencer idx]
   (when-not (state-maps/command-right-active? (:state lp) idx [0 0])
     (reset-pattern! lp-sequencer idx)
@@ -61,4 +67,4 @@
           (render-beats lp lp-sequencer last-col col previous-x current-x))))))
 
 (defn setup-side-controls [lp-sequencer mode]
-  (map-indexed (fn [idx btn] (bind mode btn (fn [lp] (toggle-row lp lp-sequencer idx)))) device/side-controls))
+  (doall (map-indexed (fn [idx btn] (bind mode btn (fn [lp] (toggle-row lp lp-sequencer idx)))) device/side-controls)))
