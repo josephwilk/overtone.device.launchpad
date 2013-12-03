@@ -10,18 +10,12 @@
    [launchpad.device :as device]
    [launchpad.grid :as grid]))
 
-(defn shutdown [lp lp-sequencer]
-  (reset-all-patterns! lp-sequencer)
-  (state-maps/column-off (:state lp) 8)
-  (device/command-right-leds-all-off lp)
-  (device/render-grid lp))
-
-(defn toggle-row [lp lp-sequencer idx]
+(defn- toggle-row [lp lp-sequencer idx]
   (when-not (state-maps/command-right-active? (:state lp) idx [0 0])
     (reset-pattern! lp-sequencer idx)
     (device/render-row lp idx)))
 
-(defn- render-beats [{state :state :as lp } lp-sequencer last-col col previous-x current-x]
+(defn- render-beats [{state :state :as lp} lp-sequencer last-col col previous-x current-x]
   (doseq [r (range 0 grid/grid-width)]
     (when (state-maps/command-right-active? state r [0 0])
       (when (seq last-col)
@@ -33,7 +27,7 @@
         (if (= 1 (nth col r))
           (when (= 1 (int (nth (sequencer-pattern lp-sequencer r) current-x)))
             (device/led-on lp  [r (mod current-x grid/grid-width)] 3 :green))
-          (device/led-on lp  [r (mod current-x grid/grid-width)] 1 :amber))))))
+          (device/led-on lp  [r (mod current-x grid/grid-width)] 2 :amber))))))
 
 (defn grid-refresh [{state :state :as lp} lp-sequencer phrase-size]
   (fn [beat]
@@ -66,5 +60,15 @@
               (render-beats lp lp-sequencer last-col col previous-x current-x)))
           (render-beats lp lp-sequencer last-col col previous-x current-x))))))
 
-(defn setup-side-controls [lp-sequencer mode]
+(defn setup-side-controls
+  "Side controls toggle on or off a sequence row"
+  [mode lp-sequencer]
   (doall (map-indexed (fn [idx btn] (bind mode btn (fn [lp] (toggle-row lp lp-sequencer idx)))) device/side-controls)))
+
+(defn off
+  "Disable all sequences"
+  [lp lp-sequencer]
+  (reset-all-patterns! lp-sequencer)
+  (state-maps/column-off (:state lp) 8)
+  (device/command-right-leds-all-off lp)
+  (device/render-grid lp))

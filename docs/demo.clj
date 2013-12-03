@@ -116,7 +116,7 @@
   ;;Sending out beat event
   (defsynth get-beat [] (send-trig (in:kr beat-trg-bus) count-trig-id (+ (in:kr beat-cnt-bus) 1)))
 
-  (def beat-rep-key (uuid))
+  (defonce beat-rep-key (uuid))
   (defonce get-beat-s (get-beat))
 
   (metronome/start lp :mixer count-trig-id beat-rep-key))
@@ -124,8 +124,6 @@
 ;;Use LED row sequences to indicate when beats strike
 (do
   (require '[launchpad.plugin.beat :as beat])
-  (require '[launchpad.state-maps :as state-maps])
-  (require '[launchpad.device :as device])
   (require '[overtone.synth.timing :as timing])
   (use '[overtone.helpers.lib :only [uuid]])
   (use 'launchpad.sequencer)
@@ -134,30 +132,25 @@
   (def phrase-size 16)
 
   (defonce count-trig-id (trig-id))
-
   (defonce root-trg-bus (control-bus)) ;; global metronome pulse
   (defonce root-cnt-bus (control-bus)) ;; global metronome count
   (defonce beat-trg-bus (control-bus)) ;; beat pulse (fraction of root)
   (defonce beat-cnt-bus (control-bus)) ;; beat count
-
   (def BEAT-FRACTION "Number of global pulses per beat" 30)
   (def current-beat (atom BEAT-FRACTION))
-
   (defonce r-cnt (timing/counter :in-bus root-trg-bus :out-bus root-cnt-bus))
   (defonce r-trg (timing/trigger :rate 100 :in-bus root-trg-bus))
   (defonce b-cnt (timing/counter :in-bus beat-trg-bus :out-bus beat-cnt-bus))
   (defonce b-trg (timing/divider :div BEAT-FRACTION :in-bus root-trg-bus :out-bus beat-trg-bus))
-
-  ;;Sending out beat event
   (defsynth get-beat [] (send-trig (in:kr beat-trg-bus) count-trig-id (+ (in:kr beat-cnt-bus) 1)))
 
-  (def tom-electro-s (sample (freesound-path 108001)))
+  (def tom-electro-s       (sample (freesound-path 108001)))
   (def sizzling-high-hat-s (sample (freesound-path 44859)))
-  (def kick-s     (sample (freesound-path 777)))
-  (def hip-hop-kick-s (sample (freesound-path 131336)))
-  (def clap-s (sample (freesound-path 24786)))
-  (def bell-s (sample (freesound-path 173000)))
-  (def snare-s (sample (freesound-path 100397)))
+  (def kick-s              (sample (freesound-path 777)))
+  (def hip-hop-kick-s      (sample (freesound-path 131336)))
+  (def clap-s              (sample (freesound-path 24786)))
+  (def bell-s              (sample (freesound-path 173000)))
+  (def snare-s             (sample (freesound-path 100397)))
 
   (def click-s    (sample (freesound-path 406)))
   (def boom-s     (sample (freesound-path 33637)))
@@ -171,12 +164,10 @@
 
   (def lp-sequencer (mk-sequencer "launchpad-sequencer" all-samples phrase-size beat-cnt-bus beat-trg-bus 0))
 
-  (def refresh-beat-key (uuid))
+  (defonce refresh-beat-key (uuid))
 
   ;; Think of this as the event loop for the grid, triggered on a beat
-  (on-trigger count-trig-id
-              (beat/grid-refresh lp lp-sequencer phrase-size)
-              refresh-beat-key)
+  (on-trigger count-trig-id (beat/grid-refresh lp lp-sequencer phrase-size) refresh-beat-key)
 
   (beat/setup-side-controls :up lp-sequencer)
 
@@ -185,11 +176,7 @@
   (bind :up :7x5 (fn [] (ctl b-trg :div (swap! current-beat dec))))
 
   ;;Shutdown
-  (bind :up :arm  (fn [lp]
-                    (reset-all-patterns! lp-sequencer)
-                    (state-maps/column-off (:state lp) 8)
-                    (device/command-right-leds-all-off lp)
-                    (device/render-grid lp))))
+  (bind :up :arm  (fn [lp] (beat/off lp lp-sequencer))))
 
 ;;Use LED row sequences to indicate when beats should strike (without forced beat sync)
 (do
