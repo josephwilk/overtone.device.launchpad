@@ -92,10 +92,38 @@
   ;;(stop-all)
   )
 
+;;Metromone
+;; Use :mixer cell to display beat
+(do
+  (require '[launchpad.plugin.metronome :as metronome])
+  (require '[overtone.synth.timing :as timing])
+  (use '[overtone.helpers.lib :only [uuid]])
+
+  (def lp (first launchpad-kons))
+
+  (defonce count-trig-id (trig-id))
+  (defonce root-trg-bus (control-bus)) ;; global metronome pulse
+  (defonce root-cnt-bus (control-bus)) ;; global metronome count
+  (defonce beat-trg-bus (control-bus)) ;; beat pulse (fraction of root)
+  (defonce beat-cnt-bus (control-bus)) ;; beat count
+  (def BEAT-FRACTION "Number of global pulses per beat" 30)
+  (def current-beat (atom BEAT-FRACTION))
+  (defonce r-cnt (timing/counter :in-bus root-trg-bus :out-bus root-cnt-bus))
+  (defonce r-trg (timing/trigger :rate 100 :in-bus root-trg-bus))
+  (defonce b-cnt (timing/counter :in-bus beat-trg-bus :out-bus beat-cnt-bus))
+  (defonce b-trg (timing/divider :div BEAT-FRACTION :in-bus root-trg-bus :out-bus beat-trg-bus))
+
+  ;;Sending out beat event
+  (defsynth get-beat [] (send-trig (in:kr beat-trg-bus) count-trig-id (+ (in:kr beat-cnt-bus) 1)))
+
+  (def beat-rep-key (uuid))
+  (defonce get-beat-s (get-beat))
+
+  (metronome/start lp :mixer count-trig-id beat-rep-key))
+
 ;;Use LED row sequences to indicate when beats strike
 (do
   (require '[launchpad.plugin.beat :as beat])
-
   (require '[launchpad.state-maps :as state-maps])
   (require '[launchpad.device :as device])
   (require '[overtone.synth.timing :as timing])
@@ -115,15 +143,22 @@
   (def BEAT-FRACTION "Number of global pulses per beat" 30)
   (def current-beat (atom BEAT-FRACTION))
 
-  (def r-cnt (timing/counter :in-bus root-trg-bus :out-bus root-cnt-bus))
-  (def r-trg (timing/trigger :rate 100 :in-bus root-trg-bus))
-  (def b-cnt (timing/counter :in-bus beat-trg-bus :out-bus beat-cnt-bus))
-  (def b-trg (timing/divider :div BEAT-FRACTION :in-bus root-trg-bus :out-bus beat-trg-bus))
+  (defonce r-cnt (timing/counter :in-bus root-trg-bus :out-bus root-cnt-bus))
+  (defonce r-trg (timing/trigger :rate 100 :in-bus root-trg-bus))
+  (defonce b-cnt (timing/counter :in-bus beat-trg-bus :out-bus beat-cnt-bus))
+  (defonce b-trg (timing/divider :div BEAT-FRACTION :in-bus root-trg-bus :out-bus beat-trg-bus))
 
   ;;Sending out beat event
   (defsynth get-beat [] (send-trig (in:kr beat-trg-bus) count-trig-id (+ (in:kr beat-cnt-bus) 1)))
 
+  (def tom-electro-s (sample (freesound-path 108001)))
+  (def sizzling-high-hat-s (sample (freesound-path 44859)))
   (def kick-s     (sample (freesound-path 777)))
+  (def hip-hop-kick-s (sample (freesound-path 131336)))
+  (def clap-s (sample (freesound-path 24786)))
+  (def bell-s (sample (freesound-path 173000)))
+  (def snare-s (sample (freesound-path 100397)))
+
   (def click-s    (sample (freesound-path 406)))
   (def boom-s     (sample (freesound-path 33637)))
   (def subby-s    (sample (freesound-path 25649)))
@@ -131,35 +166,19 @@
   (def godzilla-s (sample (freesound-path 206078)))
   (def outiuty-s  (sample (freesound-path 55086)))
 
-  (def all-samples [kick-s click-s boom-s subby-s choir-s godzilla-s outiuty-s])
+;;  (def all-samples [kick-s click-s boom-s subby-s choir-s godzilla-s outiuty-s])
+  (def all-samples [tom-electro-s sizzling-high-hat-s hip-hop-kick-s clap-s bell-s snare-s])
 
   (def lp-sequencer (mk-sequencer "launchpad-sequencer" all-samples phrase-size beat-cnt-bus beat-trg-bus 0))
 
   (def refresh-beat-key (uuid))
-  (def beat-rep-key (uuid))
-
-  (defonce get-beat-s (get-beat))
-
-  ;; Use :mixer cell to display beat
-  (on-trigger count-trig-id
-    (fn [beat]
-      (let [lp (first c/launchpad-kons)
-            brightness (mod beat 4)]
-        (device/led-on  lp :mixer brightness :amber)))
-    beat-rep-key)
 
   ;; Think of this as the event loop for the grid, triggered on a beat
   (on-trigger count-trig-id
               (beat/grid-refresh lp lp-sequencer phrase-size)
               refresh-beat-key)
 
-  (bind :up :vol   (fn [lp] (beat/toggle-row lp lp-sequencer 0)))
-  (bind :up :pan   (fn [lp] (beat/toggle-row lp lp-sequencer 1)))
-  (bind :up :snda  (fn [lp] (beat/toggle-row lp lp-sequencer 2)))
-  (bind :up :sndb  (fn [lp] (beat/toggle-row lp lp-sequencer 3)))
-  (bind :up :stop  (fn [lp] (beat/toggle-row lp lp-sequencer 4)))
-  (bind :up :trkon (fn [lp] (beat/toggle-row lp lp-sequencer 5)))
-  (bind :up :solo  (fn [lp] (beat/toggle-row lp lp-sequencer 6)))
+  (beat/setup-side-controls :up lp-sequencer)
 
   ;;Adjust bpm
   (bind :up :7x6 (fn [] (ctl b-trg :div (swap! current-beat inc))))
