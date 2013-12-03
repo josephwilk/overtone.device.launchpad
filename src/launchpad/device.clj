@@ -185,14 +185,14 @@
                  start-lag (rand-int 1000)]
              (Thread/sleep start-lag)
              (doseq [intensity (range 1 4)]
+               (doseq [row (range 0 grid/grid-width)]
                  (led-on* rcvr [row col] intensity :red)
                  (Thread/sleep (- refresh row))))))
-         (range 0 8)))
-                 (doseq [row (range 0 grid/grid-width)]
+         (range 0 grid/grid-width)))
   (midi-control rcvr all-lights 127)
   (Thread/sleep 400)
-  (doseq [row (reverse (range 0 8))]
-    (doseq [col (reverse (range 0 8))]
+  (doseq [row (reverse (range 0 grid/grid-width))]
+    (doseq [col (reverse (range 0 grid/grid-width))]
       (led-off* rcvr [row col]))
     (Thread/sleep 50))
   (reset-launchpad rcvr))
@@ -200,7 +200,7 @@
 (defn- side-event-handler [launchpad name state]
   (fn [_]
     (state-maps/toggle-side! state (side->row name))
-    (toggle-led launchpad name (state-maps/cell state (side->row name) 8))
+    (toggle-led launchpad name (state-maps/cell state (side->row name) grid/side-btns))
     (when-let [trigger-fn (state-maps/trigger-fn state name)]
       (if (= 0 (arg-count trigger-fn))
         (trigger-fn)
