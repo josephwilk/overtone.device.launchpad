@@ -124,6 +124,7 @@
 ;;Use LED row sequences to indicate when beats strike
 (do
   (require '[launchpad.plugin.beat :as beat])
+  (require '[launchpad.plugin.beat-scroll :as beat-scroll])
   (require '[overtone.synth.timing :as timing])
   (use '[overtone.helpers.lib :only [uuid]])
   (use 'launchpad.sequencer)
@@ -167,7 +168,8 @@
   (defonce refresh-beat-key (uuid))
 
   ;; Think of this as the event loop for the grid, triggered on a beat
-  (on-trigger count-trig-id (beat/grid-refresh lp lp-sequencer phrase-size) refresh-beat-key)
+  (on-trigger count-trig-id (beat-scroll/grid-refresh lp lp-sequencer phrase-size) refresh-beat-key)
+  ;;(on-trigger count-trig-id (beat/grid-refresh lp lp-sequencer phrase-size) refresh-beat-key)
 
   (beat/setup-side-controls :up lp-sequencer)
 

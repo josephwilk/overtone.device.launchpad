@@ -72,6 +72,8 @@
   [state y]
   (grid/complete-grid-row (active-grid state) y))
 
+(defn complete-grid [state] (grid/complete-grid (active-grid state)))
+
 (defn empty []
   {:active :up
    :session 0

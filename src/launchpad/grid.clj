@@ -1,4 +1,6 @@
-(ns launchpad.grid)
+(ns launchpad.grid
+  "We refer to the 8x8 buttons as the Grid
+   and the full 9x9 (including side buttons as the Page")
 
 (defn fn-grid [] {})
 
@@ -43,6 +45,11 @@
                          seq))
                   full-grid))))
 
+(defn complete-grid
+  "Grid and hence no side buttons"
+  [grid]
+  (map #(mapcat drop-last (split-at page-width %)) grid))
+
 (defn side? [x] (not= grid-width (mod x (inc grid-width))))
 
 (defn side [full-grid] (map (fn [row] (nth row side-btns)) full-grid) )
@@ -67,6 +74,7 @@
         new-grid)))
 
 (defn set
+  "Set a cell within a grid to a value"
   ([grid y x value] (set [0 0] grid y x value))
   ([[x-pos y-pos]  grid y x value]
       (let [old-row (-> grid (nth y) (vec))
@@ -74,6 +82,7 @@
         (assoc (vec grid) y new-row))))
 
 (defn cell
+  "Find the value of a cell"
   ([grid y x] (cell [0 0] grid y x))
   ([[x-pos y-pos] grid y x]
      (let [x-offset (x-offset x x-pos)]

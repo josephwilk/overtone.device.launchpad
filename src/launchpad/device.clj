@@ -165,6 +165,12 @@
         (doseq [y (range 0 grid/grid-width)]
           (toggle-led launchpad [row y] (grid/cell grid row y) intensity color)))))
 
+(defn render-column-at [lp column position intensity color]
+  (doall
+   (map-indexed
+    (fn [idx cell]
+      (toggle-led lp [idx position] cell intensity color)) column)))
+
 (defn render-grid
   ([launchpad] (render-grid launchpad 3 :amber))
   ([launchpad intensity color]
