@@ -35,9 +35,9 @@
 
 (defn start-point-for [row sample] (* row (/ (:size sample) 8)))
 
-(defn sample-watch-fn [lp sample row]
+(defn sample-watch-fn [lp sample row mode]
   (fn [_ _ _ ns]
-    (when (state-maps/active-mode? (:state lp) :left)
+    (when (state-maps/active-mode? (:state lp) mode)
       (let [new-cell (cell-from-playtime (int ns) sample)]
         (doseq [col (remove #(= % new-cell) (range 0 8))]
           (state-maps/set (:state lp) row col 0)
@@ -75,7 +75,7 @@
 
   (add-watch (:playtime sample-row)
              (keyword (str "sample-" idx "-" mode))
-             (sample-watch-fn lp (:sample sample-row) (:row sample-row))))
+             (sample-watch-fn lp (:sample sample-row) (:row sample-row) mode)))
 
 (defn sample-rows [lp mode samples]
   (doseq [[idx sample]
