@@ -54,19 +54,21 @@
 
 (defn x-page-count [grid] (int (/ (count (first grid)) page-width)))
 (defn y-page-count [grid] (int (/ (count grid) grid-height)))
+(defn x-max [grid] (count (first grid)))
+(defn y-max [grid] (count grid))
 
 (defn side? [x] (not= grid-width (mod x (inc grid-width))))
 
 (defn side [full-grid] (map (fn [row] (nth row side-btns)) full-grid) )
 
 (defn grid-column
-  "Direct access into the grid irrelevant of grid-index"
-  [grid x]
+  "Direct access into the grid irrelevant of x grid-index"
+  [[_ y-pos] grid x]
   (let [grid-x (cond
                 (>= x grid-width) (int (+ (/ x grid-width) x))
                 true x)]
     (when (< grid-x (count (first grid)))
-      (map #(nth % grid-x) grid))))
+      (map #(nth % grid-x) (take grid-height (drop (y-offset 0 y-pos) grid))))))
 
 (defn toggle
   ([grid y x] (toggle [0 0] grid y x))
@@ -103,22 +105,27 @@
   ([position-cords grid y x] (not= 0 (cell position-cords grid y x))))
 
 (defn row
-  ([grid n] (row [0 0] grid n))
-  ([[x-pos y-pos] grid n]
+  ([grid y] (row [0 0] grid y))
+  ([[x-pos y-pos] grid y]
+     (let [y-offset (y-offset y y-pos)])
      (->
       (drop (x-offset 0 x-pos))
       (take (x-offset page-width x-pos))
-      (nth grid n))))
+      (nth grid y-offset))))
 
-(defn complete-grid-row [grid y]
-  (mapcat
-   drop-last
-   (split-at page-width (nth grid y))))
+(defn complete-grid-row
+  [[_ y-pos] grid y]
+  (let [y-offset (y-offset y y-pos)]
+    (mapcat
+     drop-last
+     (split-at page-width (nth grid y-pos)))))
+
+(defn column [grid])
 
 (defn grid-row
   ([grid n] (grid-row [0 0] grid n))
   ([[x-pos y-pos] grid n]
-     (->> (nth grid n)
+     (->> (nth grid (y-offset y-pos n))
           (drop (x-offset 0 x-pos))
           (take (x-offset grid-width x-pos)))))
 

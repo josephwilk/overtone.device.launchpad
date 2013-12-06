@@ -30,7 +30,10 @@
   (bind :user1 :1x2 #(tom))
   (bind :user1 :2x2 #(clap))
   (bind :user1 :3x2 #(haziti-clap))
-  (bind :user1 :4x2 #(bing)))
+  (bind :user1 :4x2 #(bing))
+
+  ;;Notice how we can bind to different y dimensions
+  (bind [:user1 1] :0x0 #(bing)))
 
 ;;Map each sample to a row where each button
 ;;forces playback of the sample to a specific timepoint

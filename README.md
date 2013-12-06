@@ -17,7 +17,8 @@ https://clojars.org/launchpad
 Launchpad works through an evented system. While you can do anything with those events `launchpad.core` setups some
 useful defaults:
 
-* When :session mode is lit allows infinte scrolling left or right (for greater than 8 phrases)
+* When :session mode is lit allows infinite scrolling left or right (for greater than 8 phrases)
+* When :session mode is lit allows infinite scrolling up or down (for binding more than 8 beats/samples)
 * All top control buttons except :user1 / :user2 & :session
   * Enter mode where each grid remembers keys pressed.
   * Grid buttons simply toggle state/light on/off.
@@ -34,8 +35,12 @@ useful defaults:
 
 (boot!)
 
+;;Bind to the main grid
 (bind :up :0x0 #(kick))
 (bind :up :0x1 #(hat3))
+
+;;Bind to the virtual grid @ y=1 (i.e session mode on and down btn once)
+(bind [:up 1] :0x1 #(hat3))
 ```
 
 ## Plugins

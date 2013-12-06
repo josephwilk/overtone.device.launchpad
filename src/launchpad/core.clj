@@ -23,11 +23,16 @@
 
   (defn bind
     "For a specific mode bind a grid cell key press to a function.
-     If function takes an argument it will be passed a stateful launchpad device."
+     If function takes an argument it will be passed a stateful launchpad device.
+
+     To bind a button that is not on the 0 y axis/page specify the mode as:
+     [:user1 1]"
     ([mode cell fun] (bind (first launchpad-kons) mode cell fun))
     ([lp mode cell fun]
-       (assert (some #{mode} device/modes))
-       (swap! (:state lp) assoc-in [:fn-map mode cell] fun)))
+       (let [[mode y] (if (sequential? mode) mode [mode 0])
+             bind-handle (str mode "-" y)]
+         (assert (some #{mode} device/modes))
+         (swap! (:state lp) assoc-in [:fn-map bind-handle cell] fun))))
 
   (e/on-event [:Launchpad :control :up]
               (fn [{lp :launchpad val :val}]
