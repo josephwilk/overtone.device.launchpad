@@ -22,8 +22,10 @@
    [0 0 0 0 0 0 0 0 0]
    [0 0 0 0 0 0 0 0 0]])
 
-(defn x-offset [x x-pos]
-  (+ x (* x-pos page-width)))
+(defn- cord-offset [cord position] )
+
+(defn x-offset [x x-pos] (+ x (* x-pos page-width)))
+(defn y-offset [y y-pos] (+ y (* y-pos grid-height)))
 
 (defn project-8x8
   ([full-grid] (project-8x8 [0 0] full-grid))
@@ -32,7 +34,7 @@
             (->> row
                  (drop (x-offset 0 x-pos))
                  (take grid-width)))
-          full-grid)))
+          (take grid-height (drop (y-offset 0 y-pos) full-grid)))))
 
 (defn project-page
   ([full-grid] (project-page [0 0] full-grid))
@@ -43,12 +45,15 @@
                          (drop (x-offset 0 x-pos))
                          (take page-width)
                          seq))
-                  full-grid))))
+                  (take grid-height (drop (y-offset 0 y-pos) full-grid))))))
 
 (defn complete-grid
   "Grid and hence no side buttons"
   [grid]
   (map #(mapcat drop-last (split-at page-width %)) grid))
+
+(defn x-page-count [grid] (int (/ (count (first grid)) page-width)))
+(defn y-page-count [grid] (int (/ (count grid) grid-height)))
 
 (defn side? [x] (not= grid-width (mod x (inc grid-width))))
 
@@ -66,28 +71,31 @@
 (defn toggle
   ([grid y x] (toggle [0 0] grid y x))
   ([[x-pos y-pos] grid y x]
-      (let [x-offset (x-offset x x-pos)
-            old-row (-> grid (nth y) (vec))
-            old-cell (nth old-row x-offset)
-            new-row (assoc old-row x-offset (if (= 1 old-cell) 0 1))
-            new-grid (assoc (vec grid) y new-row)]
-        new-grid)))
+     (let [x-offset (x-offset x x-pos)
+           y-offset (y-offset y y-pos)
+           old-row (-> grid (nth y-offset) (vec))
+           old-cell (nth old-row x-offset)
+           new-row (assoc old-row x-offset (if (= 1 old-cell) 0 1))
+           new-grid (assoc (vec grid) y-offset new-row)]
+       new-grid)))
 
 (defn set
   "Set a cell within a grid to a value"
   ([grid y x value] (set [0 0] grid y x value))
   ([[x-pos y-pos]  grid y x value]
-      (let [old-row (-> grid (nth y) (vec))
-            new-row (assoc old-row (x-offset x x-pos) value)]
-        (assoc (vec grid) y new-row))))
+     (let [y-offset (y-offset y y-pos)
+           old-row (-> grid (nth y-offset) (vec))
+           new-row (assoc old-row (x-offset x x-pos) value)]
+        (assoc (vec grid) y-offset new-row))))
 
 (defn cell
   "Find the value of a cell"
   ([grid y x] (cell [0 0] grid y x))
   ([[x-pos y-pos] grid y x]
-     (let [x-offset (x-offset x x-pos)]
+     (let [x-offset (x-offset x x-pos)
+           y-offset (y-offset y y-pos)]
        (-> grid
-           (nth y)
+           (nth y-offset)
            (nth x-offset)))))
 
 (defn on?
@@ -121,5 +129,6 @@
        (when (< x-offset (count (first grid)))
          (map #(nth % x-offset) grid)))))
 
-(defn shift-left [grid]
-  (map #(concat % (take page-width (repeat 0))) grid))
+(defn shift-left [grid] (map #(concat % (take page-width (repeat 0))) grid))
+
+(defn shift-down [grid] (concat grid (repeat grid-height (take page-width (repeat 0)))))

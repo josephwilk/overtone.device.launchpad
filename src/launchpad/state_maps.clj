@@ -57,15 +57,31 @@
 (defn shift-left [state]
   (let [[x-pos y-pos] (grid-index state)]
     (when (> x-pos 0)
-      (swap! state assoc :grid-index [(dec x-pos) 0]))))
+      (swap! state assoc :grid-index [(dec x-pos) y-pos]))))
 
 (defn shift-right [state]
   (let [active-mode (mode state)
         [x-pos y-pos] (grid-index state)
-        current-grid-size (int (/ (count (first (active-grid state))) grid/page-width))]
+        current-grid-size (grid/x-page-count (active-grid state))]
     (when (>= (inc x-pos) current-grid-size)
-      (swap! state assoc active-mode (grid/shift-left (active-grid state)))))
-  (swap! state assoc :grid-index [(inc (first (grid-index state))) 0]))
+      (swap! state assoc active-mode (grid/shift-left (active-grid state))))
+    (swap! state assoc :grid-index [(inc x-pos) y-pos])))
+
+(defn shift-up [state]
+  (let [[x-pos y-pos] (grid-index state)]
+    (when (> y-pos 0)
+      (swap! state assoc :grid-index [x-pos (dec y-pos)])))
+  (println (grid-index state)))
+
+(defn shift-down [state]
+  (let [active-mode (mode state)
+        [x-pos y-pos] (grid-index state)
+        current-grid-size (grid/y-page-count (active-grid state))]
+    (when (>= (inc y-pos) current-grid-size)
+      (swap! state assoc active-mode (grid/shift-down (active-grid state))))
+    (swap! state assoc :grid-index [x-pos (inc y-pos)]))
+
+  (println (grid-index state)))
 
 (defn complete-grid-row
   "Return a single row y spanning all dimensions"

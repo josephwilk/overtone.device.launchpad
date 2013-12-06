@@ -30,13 +30,21 @@
        (swap! (:state lp) assoc-in [:fn-map mode cell] fun)))
 
   (e/on-event [:Launchpad :control :up]
-              (fn [{lp :launchpad}]
+              (fn [{lp :launchpad val :val}]
+                (when (and (= 1.0 val) (mode/session? lp))
+                  (state-maps/shift-up (:state lp))
+                  (device/render-grid lp))
+
                 (when-not (mode/session? lp)
                   (mode/trigger lp :up)))
               ::up-mode)
 
   (e/on-event [:Launchpad :control :down]
-              (fn [{lp :launchpad}]
+              (fn [{lp :launchpad val :val}]
+                (when (and (= 1.0 val) (mode/session? lp))
+                  (state-maps/shift-down (:state lp))
+                  (device/render-grid lp))
+
                 (when-not (mode/session? lp)
                   (mode/trigger lp :down)))
               ::down-mode)
