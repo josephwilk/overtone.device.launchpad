@@ -6,6 +6,8 @@
   (use 'overtone.live :reload)
   (boot!))
 
+(def lp (first launchpad-kons))
+
 ;;Drum kit
 (do
   (use 'overtone.inst.drum)
@@ -43,8 +45,6 @@
   (require '[launchpad.state-maps :as state-maps] :reload)
   (require '[launchpad.sequencer :refer :all] :reload)
   (require '[overtone.at-at :as at-at])
-
-  (def lp (first launchpad-kons))
 
   (def phat-s        (sample (freesound-path 48489)))
   (def groove-s      (sample (freesound-path 48488)))
@@ -102,8 +102,6 @@
   (require '[overtone.synth.timing :as timing])
   (use '[overtone.helpers.lib :only [uuid]])
 
-  (def lp (first launchpad-kons))
-
   (defonce count-trig-id (trig-id))
   (defonce root-trg-bus (control-bus)) ;; global metronome pulse
   (defonce root-cnt-bus (control-bus)) ;; global metronome count
@@ -132,7 +130,66 @@
   (use '[overtone.helpers.lib :only [uuid]])
   (use 'launchpad.sequencer)
 
-  (def lp (first launchpad-kons))
+  (def phrase-size 16)
+
+  (defonce count-trig-id (trig-id))
+  (defonce root-trg-bus (control-bus)) ;; global metronome pulse
+  (defonce root-cnt-bus (control-bus)) ;; global metronome count
+  (defonce beat-trg-bus (control-bus)) ;; beat pulse (fraction of root)
+  (defonce beat-cnt-bus (control-bus)) ;; beat count
+  (def BEAT-FRACTION "Number of global pulses per beat" 30)
+  (def current-beat (atom BEAT-FRACTION))
+  (defonce r-cnt (timing/counter :in-bus root-trg-bus :out-bus root-cnt-bus))
+  (defonce r-trg (timing/trigger :rate 100 :in-bus root-trg-bus))
+  (defonce b-cnt (timing/counter :in-bus beat-trg-bus :out-bus beat-cnt-bus))
+  (defonce b-trg (timing/divider :div BEAT-FRACTION :in-bus root-trg-bus :out-bus beat-trg-bus))
+  (defsynth get-beat [] (send-trig (in:kr beat-trg-bus) count-trig-id (+ (in:kr beat-cnt-bus) 1)))
+
+  (def tom-electro-s       (sample (freesound-path 108001)))
+  (def sizzling-high-hat-s (sample (freesound-path 44859)))
+  (def kick-s              (sample (freesound-path 777)))
+  (def hip-hop-kick-s      (sample (freesound-path 131336)))
+  (def clap-s              (sample (freesound-path 24786)))
+  (def bell-s              (sample (freesound-path 173000)))
+  (def snare-s             (sample (freesound-path 100397)))
+
+  (def click-s    (sample (freesound-path 406)))
+  (def boom-s     (sample (freesound-path 33637)))
+  (def subby-s    (sample (freesound-path 25649)))
+  (def choir-s    (sample (freesound-path 172323)))
+  (def godzilla-s (sample (freesound-path 206078)))
+  (def outiuty-s  (sample (freesound-path 55086)))
+
+  (def samples-set-2 [kick-s click-s boom-s subby-s choir-s godzilla-s outiuty-s
+                      tom-electro-s sizzling-high-hat-s hip-hop-kick-s clap-s bell-s snare-s])
+
+  (def big-lp-sequencer (mk-sequencer "big-launchpad-sequencer" samples-set-2 phrase-size beat-cnt-bus beat-trg-bus 0))
+
+  (defonce big-refresh-beat-key (uuid))
+
+  ;; Think of this as the event loop for the grid, triggered on a beat
+  (on-trigger count-trig-id (beat-scroll/grid-refresh lp big-lp-sequencer phrase-size :up) big-refresh-beat-key)
+  ;;(on-trigger count-trig-id (beat/grid-refresh lp lp-sequencer phrase-size) refresh-beat-key)
+
+  (beat/setup-side-controls :up big-lp-sequencer)
+
+  ;;Adjust bpm
+  (bind :up :7x7 (fn [] (ctl b-trg :div (swap! current-beat inc))))
+  (bind :up :7x6 (fn [] (ctl b-trg :div (swap! current-beat dec))))
+
+  ;;Swap samples bound to rows
+  (bind :up :7x5 (fn [] (swap-samples! big-lp-sequencer samples-set-2)))
+
+  ;;Shutdown
+  (bind :up :arm  (fn [lp] (beat/off lp big-lp-sequencer))))
+
+(do
+  (require '[launchpad.plugin.beat :as beat])
+  (require '[launchpad.plugin.beat-scroll :as beat-scroll])
+  (require '[overtone.synth.timing :as timing])
+  (use '[overtone.helpers.lib :only [uuid]])
+  (use 'launchpad.sequencer)
+
   (def phrase-size 16)
 
   (defonce count-trig-id (trig-id))
@@ -171,21 +228,21 @@
   (defonce refresh-beat-key (uuid))
 
   ;; Think of this as the event loop for the grid, triggered on a beat
-  (on-trigger count-trig-id (beat-scroll/grid-refresh lp lp-sequencer phrase-size) refresh-beat-key)
-  ;;(on-trigger count-trig-id (beat/grid-refresh lp lp-sequencer phrase-size) refresh-beat-key)
+  ;;(on-trigger count-trig-id (beat-scroll/grid-refresh lp lp-sequencer phrase-size) refresh-beat-key)
+  (on-trigger count-trig-id (beat/grid-refresh lp lp-sequencer phrase-size :right) refresh-beat-key)
 
-  (beat/setup-side-controls :up lp-sequencer)
+  (beat/setup-side-controls :right lp-sequencer)
 
   ;;Adjust bpm
-  (bind :up :7x7 (fn [] (ctl b-trg :div (swap! current-beat inc))))
-  (bind :up :7x6 (fn [] (ctl b-trg :div (swap! current-beat dec))))
+  (bind :right :7x7 (fn [] (ctl b-trg :div (swap! current-beat inc))))
+  (bind :right :7x6 (fn [] (ctl b-trg :div (swap! current-beat dec))))
 
   ;;Swap samples bound to rows
-  (bind :up :7x5 (fn [] (swap-samples! lp-sequencer samples-set-1)))
-  (bind :up :7x4 (fn [] (swap-samples! lp-sequencer samples-set-2)))
+  (bind :right :7x5 (fn [] (swap-samples! lp-sequencer samples-set-1)))
+  (bind :right :7x4 (fn [] (swap-samples! lp-sequencer samples-set-2)))
 
   ;;Shutdown
-  (bind :up :arm  (fn [lp] (beat/off lp lp-sequencer))))
+  (bind :right :arm  (fn [lp] (beat/off lp lp-sequencer))))
 
 ;;Use LED row sequences to indicate when beats should strike (without forced beat sync)
 (do
