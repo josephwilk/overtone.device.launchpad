@@ -6,6 +6,10 @@ A framework for interacting a Launchpad with Overtone through Clojure.
 
 ![Launchpad S](http://s24.postimg.org/tn4w9d7j5/687474703a2f2f7331302e706f7374696d672e6f72672f6d.jpg)
 
+## Overtone & Launchpad in Action
+
+Watch me: http://youtu.be/tZrhaTQA9Qk
+
 ## Clojars
 
 Adding Launchpad as a dependency in your project:
@@ -66,11 +70,6 @@ Or if you want to try from the repl
 lein repl
 (load-file "docs/demo.clj")
 ```
-
-## Show my Overtone and Launchpad in action!
-
-* Demo running: http://youtu.be/0On-UHcK4s0
-* Infinite scrolling: http://youtu.be/e6ZDb8Eozd4 
 
 ## Launchpad internal documentation
 
