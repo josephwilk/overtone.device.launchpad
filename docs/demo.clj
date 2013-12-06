@@ -160,10 +160,10 @@
   (def godzilla-s (sample (freesound-path 206078)))
   (def outiuty-s  (sample (freesound-path 55086)))
 
-;;  (def all-samples [kick-s click-s boom-s subby-s choir-s godzilla-s outiuty-s])
-  (def all-samples [tom-electro-s sizzling-high-hat-s hip-hop-kick-s clap-s bell-s snare-s])
+  (def samples-set-1 [kick-s click-s boom-s subby-s choir-s godzilla-s outiuty-s])
+  (def samples-set-2 [tom-electro-s sizzling-high-hat-s hip-hop-kick-s clap-s bell-s snare-s])
 
-  (def lp-sequencer (mk-sequencer "launchpad-sequencer" all-samples phrase-size beat-cnt-bus beat-trg-bus 0))
+  (def lp-sequencer (mk-sequencer "launchpad-sequencer" samples-set-2 phrase-size beat-cnt-bus beat-trg-bus 0))
 
   (defonce refresh-beat-key (uuid))
 
@@ -174,8 +174,12 @@
   (beat/setup-side-controls :up lp-sequencer)
 
   ;;Adjust bpm
-  (bind :up :7x6 (fn [] (ctl b-trg :div (swap! current-beat inc))))
-  (bind :up :7x5 (fn [] (ctl b-trg :div (swap! current-beat dec))))
+  (bind :up :7x7 (fn [] (ctl b-trg :div (swap! current-beat inc))))
+  (bind :up :7x6 (fn [] (ctl b-trg :div (swap! current-beat dec))))
+
+  ;;Swap samples bound to rows
+  (bind :up :7x5 (fn [] (swap-samples! lp-sequencer samples-set-1)))
+  (bind :up :7x4 (fn [] (swap-samples! lp-sequencer samples-set-2)))
 
   ;;Shutdown
   (bind :up :arm  (fn [lp] (beat/off lp lp-sequencer))))

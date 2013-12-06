@@ -34,15 +34,16 @@
         vol      (set-reset-ff bar-trg)]
     (out out-bus (* vol (pan2 (scaled-play-buf 1 buf rate bar-trg) pan)))))
 
-(defn- start-synths [samples patterns num-steps beat-cnt-bus beat-trg-bus out-bus]
+(defn- start-synths [samples patterns num-steps tgt-group beat-cnt-bus beat-trg-bus out-bus]
   (doall (mapcat (fn [sample pattern out-bus]
                    (map (fn [step-idx]
-                          (mono-sequencer :buf (to-sc-id sample)
-                                          :beat-num step-idx
-                                          :pattern (:pattern-buf pattern)
-                                          :beat-cnt-bus beat-cnt-bus
-                                          :beat-trg-bus beat-trg-bus
-                                          :out-bus out-bus))
+                          (mono-sequencer [:tail tgt-group]
+                                           :buf (to-sc-id sample)
+                                           :beat-num step-idx
+                                           :pattern (:pattern-buf pattern)
+                                           :beat-cnt-bus beat-cnt-bus
+                                           :beat-trg-bus beat-trg-bus
+                                           :out-bus out-bus))
                         (range num-steps)))
                  samples
                  patterns
@@ -59,12 +60,29 @@
 
 (defn mk-sequencer [handle samples num-steps beat-cnt-bus beat-trg-bus out-bus]
   (let [patterns (mk-sequence-patterns samples num-steps)
-        synths   (start-synths samples patterns num-steps beat-cnt-bus beat-trg-bus out-bus)]
+        seq-group (group "lp-sequencer")
+        synths    (start-synths samples patterns num-steps seq-group beat-cnt-bus beat-trg-bus out-bus)]
     (with-meta {:patterns patterns
                 :num-steps num-steps
                 :num-samples (count samples)
+                :seq-group seq-group
+                :beat-cnt-bus beat-cnt-bus
+                :beat-trg-bus beat-trg-bus
+                :out-bus out-bus
                 :synths (agent synths)}
       {:type ::sequencer})))
+
+(defn swap-samples! [sequencer samples]
+  (send (:synths sequencer)
+        (fn [synths]
+          (kill (:seq-group sequencer))
+          (start-synths (take (:num-samples sequencer) samples)
+                        (:patterns sequencer)
+                        (:num-steps sequencer)
+                        (:seq-group sequencer)
+                        (:beat-cnt-bus sequencer)
+                        (:beat-trg-bus sequencer)
+                        (:out-bus sequencer)))))
 
 (defn sequencer-write!
   [sequencer idx pattern]
