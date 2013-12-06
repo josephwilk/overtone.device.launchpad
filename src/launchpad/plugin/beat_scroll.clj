@@ -19,7 +19,7 @@
     (when (state-maps/active-mode? state :up)
 
       (let [current-x (int (mod (dec beat) phrase-size))
-            idxs (take 8 (drop current-x (flatten (repeat (range 0 phrase-size)))))
+            idxs (take 8 (drop current-x (cycle (range 0 phrase-size))))
             complete-grid (state-maps/complete-grid state)]
 
         (doseq [idx (range 0 grid/grid-height)]
