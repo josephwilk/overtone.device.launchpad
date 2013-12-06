@@ -89,7 +89,7 @@
 (defn complete-grid-row
   "Return a single row y spanning all dimensions"
   [state y]
-  (grid/complete-grid-row (grid-index state) (active-grid state) y))
+  (grid/complete-grid-row (active-grid state) y))
 
 (defn complete-grid [state] (grid/complete-grid (active-grid state)))
 

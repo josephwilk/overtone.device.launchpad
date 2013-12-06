@@ -14,17 +14,17 @@
     [:green 3]
     [:green 1]))
 
-(defn grid-refresh [{state :state :as lp} lp-sequencer phrase-size]
+(defn grid-refresh [{state :state :as lp} lp-sequencer phrase-size mode]
   (fn [beat]
-    (when (state-maps/active-mode? state :up)
-
+    (when (state-maps/active-mode? state mode)
       (let [current-x (int (mod (dec beat) phrase-size))
             idxs (take 8 (drop current-x (cycle (range 0 phrase-size))))
             y-pos (state-maps/grid-y state)]
 
-        (doseq [idx (range 0 (state-maps/y-max state))]
-          (when (state-maps/command-right-active? state idx [0 0])
-            (sequencer-write! lp-sequencer idx (take phrase-size (state-maps/complete-grid-row state idx)))))
+        (when (= current-x (dec phrase-size))
+          (doseq [idx (range 0 (state-maps/y-max state))]
+            (when (state-maps/command-right-active? state idx [0 0])
+              (sequencer-write! lp-sequencer idx (take phrase-size (state-maps/complete-grid-row state idx))))))
 
         (when-not (state-maps/session-mode? state)
           (doall (map-indexed

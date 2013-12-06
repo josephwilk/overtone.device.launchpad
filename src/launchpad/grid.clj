@@ -109,18 +109,17 @@
   ([[x-pos y-pos] grid y]
      (let [y-offset (y-offset y y-pos)])
      (->
+      grid
       (drop (x-offset 0 x-pos))
       (take (x-offset page-width x-pos))
       (nth grid y-offset))))
 
 (defn complete-grid-row
-  [[_ y-pos] grid y]
-  (let [y-offset (y-offset y y-pos)]
-    (mapcat
-     drop-last
-     (split-at page-width (nth grid y-pos)))))
-
-(defn column [grid])
+  "Direct access into the entire grid, ignores any grid position"
+  [grid y]
+  (mapcat
+   drop-last
+   (split-at page-width (nth grid y))))
 
 (defn grid-row
   ([grid n] (grid-row [0 0] grid n))

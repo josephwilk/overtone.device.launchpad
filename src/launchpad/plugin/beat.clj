@@ -12,7 +12,11 @@
 
 (defn- toggle-row [lp lp-sequencer idx]
   (when-not (state-maps/command-right-active? (:state lp) idx [0 0])
+    (println (sequencer-patterns lp-sequencer))
+    (println (str "RESET" idx))
+    (println "PRE: " (sequencer-pattern lp-sequencer idx))
     (reset-pattern! lp-sequencer idx)
+    (println "POST: " (sequencer-pattern lp-sequencer idx))
     (device/render-row lp idx)))
 
 (defn- render-beats [{state :state :as lp} lp-sequencer last-col col previous-x current-x]
@@ -29,9 +33,9 @@
             (device/led-on lp  [r (mod current-x grid/grid-width)] 3 :green))
           (device/led-on lp  [r (mod current-x grid/grid-width)] 2 :amber))))))
 
-(defn grid-refresh [{state :state :as lp} lp-sequencer phrase-size]
+(defn grid-refresh [{state :state :as lp} lp-sequencer phrase-size mode]
   (fn [beat]
-    (when (state-maps/active-mode? state :up)
+    (when (state-maps/active-mode? state mode)
       (let [current-x (int (mod (dec beat) phrase-size))
             previous-x (int (mod (- beat 2) phrase-size))
             col (state-maps/grid-column state current-x)
@@ -62,8 +66,15 @@
 
 (defn setup-side-controls
   "Side controls toggle on or off a sequence row"
-  [mode lp-sequencer]
-  (doall (map-indexed (fn [idx btn] (bind mode btn (fn [lp] (toggle-row lp lp-sequencer idx)))) device/side-controls)))
+  ([mode lp-sequencer]
+     (let [row-count (:num-samples lp-sequencer)]
+       (doall
+        (map
+         (fn [row]
+           (let [y (int (/ row grid/grid-height))
+                 btn (nth device/side-controls (mod row (count device/side-controls)))]
+             (bind [mode y] btn (fn [lp] (toggle-row lp lp-sequencer row)))))
+         (range row-count))))))
 
 (defn off
   "Disable all sequences"

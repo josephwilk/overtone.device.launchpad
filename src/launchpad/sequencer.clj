@@ -86,13 +86,14 @@
 
 (defn sequencer-write!
   [sequencer idx pattern]
-  (let [buf (:pattern-buf (nth (:patterns sequencer) idx))]
-    (buffer-write! buf pattern)))
+  (when (< idx (:num-samples sequencer))
+    (let [buf (:pattern-buf (nth (:patterns sequencer) idx))]
+      (buffer-write! buf pattern))))
 
 (defn reset-pattern! [sequencer idx]
   (let [pattern (nth (:patterns sequencer) idx)
-        reset-pattern (vec (take (:num-steps pattern) (repeat 0)))]
-    (sequencer-write! sequencer idx  reset-pattern)))
+        reset-pattern (vec (take (:num-steps pattern) (repeat 0.0)))]
+    (sequencer-write! sequencer idx reset-pattern)))
 
 (defn reset-all-patterns! [sequencer]
   (doseq [c (range (count (:patterns sequencer)))]
