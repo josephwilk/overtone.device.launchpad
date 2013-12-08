@@ -123,9 +123,9 @@
    (split-at page-width (nth grid y))))
 
 (defn write-complete-grid-row [grid y row]
-  (when-not (= (x-max grid) (count row))
-    (throw+ {:type ::DifferingRowSize :hint (str "row must match grid row size. The grid has rows: " (x-max grid) " passed row has: " (count row))}))
-  (assoc y row))
+  (when-not (= (count row) (- (x-max grid) (x-page-count grid)))
+    (throw+ {:type ::DifferingRowSize :hint (str "row must match grid row size. The grid has rows: " (- (x-max grid) (x-page-count grid)) " passed row has: " (count row))}))
+  (assoc (vec grid) y (map int (mapcat #(concat % [0]) (split-at grid-width row)))))
 
 (defn grid-row
   ([grid n] (grid-row [0 0] grid n))

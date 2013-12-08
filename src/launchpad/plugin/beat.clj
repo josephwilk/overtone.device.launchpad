@@ -35,9 +35,10 @@
 
 (defn grid-pull [{state :state :as lp} lp-sequencer]
   (let [all-patterns (sequencer-patterns lp-sequencer)]
-    (map-indexed
-     #(state-maps/write-complete-grid-row! state %1 %2)
-     all-patterns)))
+    (doall (map-indexed
+            (fn [idx row]
+              (state-maps/write-complete-grid-row! state idx row))
+            all-patterns))))
 
 (defn grid-refresh [{state :state :as lp} lp-sequencer phrase-size mode]
   (fn [beat]
