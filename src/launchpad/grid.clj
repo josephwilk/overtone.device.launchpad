@@ -1,6 +1,7 @@
 (ns launchpad.grid
   "We refer to the 8x8 buttons as the Grid
-   and the full 9x9 (including side buttons as the Page")
+   and the full 9x9 (including side buttons as the Page"
+  (:use [slingshot.slingshot :only [throw+]]))
 
 (defn fn-grid [] {})
 
@@ -120,6 +121,11 @@
   (mapcat
    drop-last
    (split-at page-width (nth grid y))))
+
+(defn write-complete-grid-row [grid y row]
+  (when-not (= (x-max grid) (count row))
+    (throw+ {:type ::DifferingRowSize :hint (str "row must match grid row size. The grid has rows: " (x-max grid) " passed row has: " (count row))}))
+  (assoc y row))
 
 (defn grid-row
   ([grid n] (grid-row [0 0] grid n))

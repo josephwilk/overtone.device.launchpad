@@ -91,6 +91,11 @@
   [state y]
   (grid/complete-grid-row (active-grid state) y))
 
+(defn write-complete-grid-row!
+  [state y row]
+  (let [new-grid (grid/write-complete-grid-row (active-grid state) y row)]
+    (swap! state assoc (mode state) new-grid)))
+
 (defn complete-grid [state] (grid/complete-grid (active-grid state)))
 
 (defn x-max [state] (grid/x-max (active-grid state)))
