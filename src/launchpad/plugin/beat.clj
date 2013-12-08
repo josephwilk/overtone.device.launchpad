@@ -38,7 +38,9 @@
     (doall (map-indexed
             (fn [idx row]
               (state-maps/write-complete-grid-row! state idx row))
-            all-patterns))))
+            all-patterns))
+
+    (device/render-grid lp)))
 
 (defn grid-refresh [{state :state :as lp} lp-sequencer phrase-size mode]
   (fn [beat]
