@@ -33,8 +33,8 @@
             (device/led-on lp  [r (mod current-x grid/grid-width)] 3 :green))
           (device/led-on lp  [r (mod current-x grid/grid-width)] 2 :amber))))))
 
-(defn grid-pull [{state :state :as lp}]
-  (let [all-patterns (sequencer-patterns)]
+(defn grid-pull [{state :state :as lp} lp-sequencer]
+  (let [all-patterns (sequencer-patterns lp-sequencer)]
     (map-indexed
      #(state-maps/write-complete-grid-row! state %1 %2)
      all-patterns)))
