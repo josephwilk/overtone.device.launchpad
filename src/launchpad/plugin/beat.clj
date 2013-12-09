@@ -11,13 +11,9 @@
    [launchpad.grid :as grid]))
 
 (defn- toggle-row [lp lp-sequencer idx]
-  (when-not (state-maps/command-right-active? (:state lp) idx [0 0])
-    (println (sequencer-patterns lp-sequencer))
-    (println (str "RESET" idx))
-    (println "PRE: " (sequencer-pattern lp-sequencer idx))
+  (when-not (state-maps/absolute-command-right-active? (:state lp) idx)
     (reset-pattern! lp-sequencer idx)
-    (println "POST: " (sequencer-pattern lp-sequencer idx))
-    (device/render-row lp idx)))
+    (device/render-row lp (mod idx 8))))
 
 (defn- render-beats [{state :state :as lp} lp-sequencer last-col col previous-x current-x]
   (doseq [r (range 0 grid/grid-width)]

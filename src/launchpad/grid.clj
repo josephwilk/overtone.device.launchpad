@@ -101,6 +101,11 @@
            (nth y-offset)
            (nth x-offset)))))
 
+(defn absolute-grid-cell [grid y x]
+  (-> grid
+      (nth y)
+      (nth (+ x  (int (/ x 8))))))
+
 (defn on?
   ([grid y x] (on? [0 0] grid y x))
   ([position-cords grid y x] (not= 0 (cell position-cords grid y x))))

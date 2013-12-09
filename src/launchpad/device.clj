@@ -163,7 +163,10 @@
   ([launchpad row intensity color]
      (when-let [grid (seq (state-maps/active-page (:state launchpad)))]
         (doseq [y (range 0 grid/grid-width)]
-          (toggle-led launchpad [row y] (grid/cell grid row y) intensity color)))))
+          (toggle-led launchpad [row y] (grid/cell grid row y) intensity color))))
+  ([launchpad row-data y intensity color]
+     (doseq [x (range 0 grid/grid-width)]
+       (toggle-led launchpad [y x] (nth row-data x) intensity color))))
 
 (defn render-column-at [lp column position intensity color]
   (doall
@@ -174,10 +177,14 @@
 (defn render-grid
   ([launchpad] (render-grid launchpad 3 :amber))
   ([launchpad intensity color]
-      (let [page (state-maps/active-page (:state launchpad))]
+     (let [page (state-maps/active-page (:state launchpad))
+           side (state-maps/active-side (:state launchpad))]
         (doseq [[x row] (map vector (iterate inc 0) page)
                 [y cell] (map vector (iterate inc 0) row)]
           (toggle-led launchpad [x y] cell intensity color)))))
+
+(defn render-cell [lp cell x y intensity color]
+  (toggle-led lp [x y] cell intensity color))
 
 (defn turn-flashing-on  [rcvr] (midi-control rcvr 0 40))
 (defn turn-flashing-off [rcvr] (midi-control rcvr 0 32))
@@ -206,7 +213,7 @@
 (defn- side-event-handler [launchpad name state]
   (fn [_]
     (state-maps/toggle-side! state (side->row name))
-    (toggle-led launchpad name (state-maps/cell state (side->row name) grid/side-btns))
+    (toggle-led launchpad name (state-maps/side-cell state (side->row name)))
     (when-let [trigger-fn (state-maps/trigger-fn state name)]
       (if (= 0 (arg-count trigger-fn))
         (trigger-fn)

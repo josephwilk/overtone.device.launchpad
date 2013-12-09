@@ -9,10 +9,14 @@
    [launchpad.device :as device]
    [launchpad.grid :as grid]))
 
-(defn- color-and-intensity [state y]
-  (if (zero? y)
-    [:green 3]
-    [:green 1]))
+(defn- color-and-intensity [state x absolute-y]
+  (if (zero? x)
+    (if (state-maps/absolute-command-right-active? state absolute-y)
+      [:green 3]
+      [:amber 3])
+    (if (state-maps/absolute-command-right-active? state absolute-y)
+      [:green 1]
+      [:amber 1])))
 
 (defn grid-refresh [{state :state :as lp} lp-sequencer phrase-size mode]
   (fn [beat]
@@ -23,13 +27,19 @@
 
         (when (= current-x (dec phrase-size))
           (doseq [idx (range 0 (state-maps/y-max state))]
-            (when (state-maps/command-right-active? state idx [0 0])
+            (when (state-maps/absolute-command-right-active? state idx)
               (sequencer-write! lp-sequencer idx (take phrase-size (state-maps/complete-grid-row state idx))))))
 
         (when-not (state-maps/session-mode? state)
-          (doall (map-indexed
-                  (fn [idx col-idx]
-                    (when (< col-idx (state-maps/x-max state))
-                      (let [[color intensity] (color-and-intensity state idx)]
-                        (device/render-column-at lp (state-maps/grid-column state col-idx) idx intensity color))))
-                  idxs)))))))
+          (doall
+           (map-indexed
+            (fn [x absolute-x]
+              (when (< absolute-x (state-maps/y-max state))
+                (doseq [y (range 0 8)]
+                  (let [y-page (state-maps/grid-y state)
+                        absolute-y (+ y (* grid/grid-height y-page))
+                        [color intensity] (color-and-intensity state x absolute-y)]
+
+
+                    (device/render-cell lp (state-maps/absolute-grid-cell state absolute-y absolute-x) y x intensity color)))))
+            idxs)))))))
