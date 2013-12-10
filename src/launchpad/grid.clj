@@ -27,9 +27,11 @@
   ([full-grid] (project [0 0] full-grid))
   ([[x-pos y-pos] full-grid]
      (map (fn [row]
-            (->> row
-                 (drop (x-offset 0 x-pos))
-                 (take grid-width)))
+            (let [new-row (->> row
+                               (drop (x-offset 0 x-pos))
+                               (take grid-width)
+                               seq)]
+              (or row (take grid-width (repeat 0)))))
           (take grid-height (drop (y-offset 0 y-pos) full-grid)))))
 
 (defn x-page-count [grid] (int (/ (count (first grid)) grid-width)))
