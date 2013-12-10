@@ -43,8 +43,8 @@
     (when (state-maps/active-mode? state mode)
       (let [current-x (int (mod (dec beat) phrase-size))
             previous-x (int (mod (- beat 2) phrase-size))
-            col (state-maps/grid-column state current-x)
-            last-col (state-maps/grid-column state previous-x)]
+            col (state-maps/column state current-x)
+            last-col (state-maps/column state previous-x)]
 
         (when-not (state-maps/session-mode? state)
           (let [[x _] (state-maps/grid-index state)
@@ -60,7 +60,7 @@
         (when (= current-x (dec phrase-size))
           (doseq [idx (range grid/grid-height)]
             (when (state-maps/command-right-active? state idx [0 0])
-              (sequencer-write! lp-sequencer idx (take phrase-size (state-maps/complete-grid-row state idx))))))
+              (sequencer-write! lp-sequencer idx (take phrase-size (state-maps/complete-row state idx))))))
 
         (if (state-maps/session-mode? state)
           (let [[x _] (state-maps/grid-index state)

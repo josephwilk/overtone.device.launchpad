@@ -11,15 +11,16 @@
 (defn active-side [state] (-> ((mode state) @state) :side))
 (defn active-grid [state] (-> ((mode state) @state) :grid))
 
-(defn active-page
-  "For now we hack the global side grid over the 9th column within the page.
-   This is so we can have 1 set of side btns for horizontal grids"
-  [state]
+(defn x-max [state] (grid/x-max (active-grid state)))
+(defn y-max [state] (grid/y-max (active-grid state)))
+
+(defn active-page [state]
   (map-indexed
    (fn [idx row]
-     (let [side-grid (side/project (active-side state) (grid-y state)) ]
-       (assoc (vec row) grid/grid-width (nth side-grid idx))))
-   (grid/project-page (grid-index state) (active-grid state))))
+     (let [side-grid (side/project (active-side state) (grid-y state))]
+       (println  :---------> (concat row [(nth side-grid idx)]))
+       (concat row [(nth side-grid idx)])))
+   (grid/project (grid-index state) (active-grid state))))
 
 (defn toggle! [state x y]
   (let [new-grid (grid/toggle (grid-index state) (active-grid state) x y)]
@@ -33,7 +34,6 @@
        (get-in (:fn-map @state) [handle (keyword name)]))))
 
 (defn toggle-side! [state x]
-  (toggle! state x grid/side-btns)
   (let [new-side (side/toggle (active-side state) x (grid-y state))]
     (println new-side)
     (swap! state assoc-in [(mode state) :side] new-side)))
@@ -42,20 +42,19 @@
   ([state x y] (on? state x y (grid-index state)))
   ([state x y grid-index] (grid/on? grid-index (active-grid state) x y)))
 
-(defn grid-row [state n] (grid/grid-row (grid-index state) (active-grid state) n))
-
 (defn set [state x y value]
   (swap! state assoc-in [(mode state) :grid] (grid/set (grid-index state) (active-grid state) x y value)))
 
-(defn cell [state y x] (grid/cell (grid-index state) (active-grid state) y x))
-(defn absolute-grid-cell [state y x] (grid/absolute-grid-cell (active-grid state) y x))
+(defn cell
+  "Cell relative to the active grid"
+  [state y x] (grid/cell (grid-index state) (active-grid state) y x))
+
+(defn absolute-cell [state y x] (grid/absolute-cell (active-grid state) y x))
 
 (defn side-cell [state x] (side/cell (active-side state) x (grid-y state)))
 
-(defn row [state n] (grid/row (grid-index state) (active-grid state) n))
+(defn row    [state n] (grid/row (grid-index state) (active-grid state) n))
 (defn column [state n] (grid/col (grid-index state) (active-grid state) n))
-
-(defn grid-column [state n] (grid/grid-column (grid-index state) (active-grid state) n))
 
 (defn column-off [state col]
   (let [grid (active-grid state)
@@ -106,20 +105,15 @@
 
   (println (grid-index state)))
 
-(defn complete-grid-row
+(defn complete-row
   "Return a single row y spanning all dimensions"
   [state y]
-  (grid/complete-grid-row (active-grid state) y))
+  (grid/complete-row (active-grid state) y))
 
 (defn write-complete-grid-row!
   [state y row]
   (let [new-grid (grid/write-complete-grid-row (active-grid state) y row)]
     (swap! state assoc-in [(mode state) :grid] new-grid)))
-
-(defn complete-grid [state] (grid/complete-grid (active-grid state)))
-
-(defn x-max [state] (grid/x-max (active-grid state)))
-(defn y-max [state] (grid/y-max (active-grid state)))
 
 (defn empty []
   {:active :up

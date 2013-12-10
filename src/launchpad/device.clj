@@ -37,7 +37,8 @@
    (range 96 105)
    (range 112 121)])
 
-(defn- coordinate->note [x y] (grid/cell [0 0] grid-notes x y))
+(defn- coordinate->note [y x]
+  (-> grid-notes (nth y) (nth x)))
 
 (def launchpad-config
   {:name "Launchpad S"
@@ -177,8 +178,7 @@
 (defn render-grid
   ([launchpad] (render-grid launchpad 3 :amber))
   ([launchpad intensity color]
-     (let [page (state-maps/active-page (:state launchpad))
-           side (state-maps/active-side (:state launchpad))]
+     (let [page (state-maps/active-page (:state launchpad))]
         (doseq [[x row] (map vector (iterate inc 0) page)
                 [y cell] (map vector (iterate inc 0) row)]
           (toggle-led launchpad [x y] cell intensity color)))))
@@ -220,7 +220,7 @@
         (trigger-fn launchpad)))))
 
 (defn- bind-grid-events [launchpad device-key idx state]
-  (doseq [[x row] (map vector (iterate inc 0) (grid/project-8x8 grid-notes))
+  (doseq [[x row] (map vector (iterate inc 0) (grid/project grid-notes))
           [y note] (map vector (iterate inc 0) row)]
     (let [type      :note-on
           note      note
