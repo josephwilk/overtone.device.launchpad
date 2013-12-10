@@ -158,7 +158,7 @@
        (led-off launchpad id))))
 
 (defn command-right-leds-all-off [lp]
-  (doseq [row (range 0 grid/grid-width)] (led-off lp [row grid/side-btns])))
+  (doseq [row (range 0 grid/grid-width)] (led-off lp [row side-grid/side-btn-height])))
 
 (defn render-row
   ([launchpad row] (render-row launchpad row 3 :amber))
