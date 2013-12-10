@@ -16,18 +16,20 @@
     (device/render-row lp (mod idx grid/grid-width))))
 
 (defn- render-beats [{state :state :as lp} lp-sequencer last-col col previous-x current-x]
-  (doseq [r (range 0 grid/grid-width)]
-    (when (state-maps/command-right-active? state r)
-      (when (seq last-col)
-        (if (= 1 (nth last-col r))
-          (device/led-on lp [r (mod previous-x grid/grid-width)] 2 :green)
-          (device/led-off lp [r (mod previous-x grid/grid-width)])))
+  (doseq [y (range 0 grid/grid-width)]
+    (let [y-page (state-maps/grid-y state)
+          absolute-y (+ y (* grid/grid-height y-page))]
+      (when (state-maps/command-right-active? state absolute-y)
+        (when (seq last-col)
+          (if (= 1 (nth last-col y))
+            (device/led-on lp [y (mod previous-x grid/grid-width)] 2 :green)
+            (device/led-off lp [y (mod previous-x grid/grid-width)])))
 
-      (when (seq col)
-        (if (= 1 (nth col r))
-          (when (= 1 (int (nth (sequencer-pattern lp-sequencer r) current-x)))
-            (device/led-on lp  [r (mod current-x grid/grid-width)] 3 :green))
-          (device/led-on lp  [r (mod current-x grid/grid-width)] 2 :amber))))))
+        (when (seq col)
+          (if (= 1 (nth col y))
+            (when (= 1 (int (nth (sequencer-pattern lp-sequencer y) current-x)))
+              (device/led-on lp  [y (mod current-x grid/grid-width)] 3 :green))
+            (device/led-on lp  [y (mod current-x grid/grid-width)] 2 :amber)))))))
 
 (defn grid-pull [{state :state :as lp} lp-sequencer]
   (let [all-patterns (sequencer-patterns lp-sequencer)]

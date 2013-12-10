@@ -6,7 +6,8 @@
    [overtone.libs.event :refer :all]
 
    [launchpad.state-maps :as state-maps]
-   [launchpad.grid :as grid]))
+   [launchpad.grid :as grid]
+   [launchpad.side :as side-grid]))
 
 (defrecord Launchpad [rcv dev interfaces state])
 
@@ -162,9 +163,11 @@
 (defn render-row
   ([launchpad row] (render-row launchpad row 3 :amber))
   ([launchpad row intensity color]
-     (when-let [grid (seq (state-maps/active-page (:state launchpad)))]
+     (let [grid (seq (state-maps/active-page (:state launchpad)))
+           side (seq (state-maps/active-side (:state launchpad)))]
        (doseq [x (range grid/grid-width)]
-          (toggle-led launchpad [row x] (grid/cell grid row x) intensity color))))
+         (toggle-led launchpad [row x] (grid/cell grid row x) intensity color))
+       (toggle-led launchpad [row side-grid/side-btn-height] (side-grid/cell side row (state-maps/grid-y (:state launchpad))) 3 :amber)))
   ([launchpad row-data y intensity color]
      (doseq [x (range 0 grid/grid-width)]
        (toggle-led launchpad [y x] (nth row-data x) intensity color))))
@@ -175,13 +178,19 @@
     (fn [idx cell]
       (toggle-led lp [idx position] cell intensity color)) column)))
 
+(defn render-side [launchpad]
+  (let [side (state-maps/active-side (:state launchpad))]
+    (doseq [y (range 0 grid/grid-height)]
+      (toggle-led launchpad [y side-grid/side-btn-height] (side-grid/cell side y (state-maps/grid-y (:state launchpad))) 3 :amber))))
+
 (defn render-grid
   ([launchpad] (render-grid launchpad 3 :amber))
   ([launchpad intensity color]
      (let [page (state-maps/active-page (:state launchpad))]
         (doseq [[x row] (map vector (iterate inc 0) page)
                 [y cell] (map vector (iterate inc 0) row)]
-          (toggle-led launchpad [x y] cell intensity color)))))
+          (toggle-led launchpad [x y] cell intensity color)))
+     (render-side launchpad)))
 
 (defn render-cell [lp cell x y intensity color]
   (toggle-led lp [x y] cell intensity color))
