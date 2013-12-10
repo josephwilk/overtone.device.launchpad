@@ -163,8 +163,8 @@
   ([launchpad row] (render-row launchpad row 3 :amber))
   ([launchpad row intensity color]
      (when-let [grid (seq (state-maps/active-page (:state launchpad)))]
-        (doseq [y (range 0 grid/grid-width)]
-          (toggle-led launchpad [row y] (grid/cell grid row y) intensity color))))
+       (doseq [x (range grid/grid-width)]
+          (toggle-led launchpad [row x] (grid/cell grid row x) intensity color))))
   ([launchpad row-data y intensity color]
      (doseq [x (range 0 grid/grid-width)]
        (toggle-led launchpad [y x] (nth row-data x) intensity color))))

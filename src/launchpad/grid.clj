@@ -92,14 +92,15 @@
   ([grid x] (col [0 0] grid x))
   ([[x-pos y-pos] grid x]
      (let [x-offset (x-offset x x-pos)]
-       (when (< x-offset (count (first grid)))
-         (map #(nth % x-offset) grid)))))
+       (if (< x-offset (x-page-count grid))
+         (map #(nth % x-offset) (drop (y-offset 0 y-pos) grid))
+         (take grid-height (repeat 0))))))
 
 (defn absolute-column
   "Direct access into the grid irrelevant of x grid-index"
   [[_ y-pos] grid x]
   (let [grid-x (cond
-                (>= x grid-width) (int (+ (/ x grid-width) x))
+                (> x grid-width) (int (dec (+ (/ x grid-width) x)))
                 true x)]
     (when (< grid-x (count (first grid)))
       (map #(nth % grid-x) (take grid-height (drop (y-offset 0 y-pos) grid))))))

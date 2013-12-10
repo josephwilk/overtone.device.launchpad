@@ -15,13 +15,7 @@
 (defn x-max [state] (grid/x-max (active-grid state)))
 (defn y-max [state] (grid/y-max (active-grid state)))
 
-(defn active-page [state]
-  (map-indexed
-   (fn [idx row]
-     (let [side-grid (side/project (active-side state) (grid-y state))]
-       (println  :---------> (concat row [(nth side-grid idx)]))
-       (concat row [(nth side-grid idx)])))
-   (grid/project (grid-index state) (active-grid state))))
+(defn active-page [state] (grid/project (grid-index state) (active-grid state)))
 
 (defn toggle! [state x y]
   (let [new-grid (grid/toggle (grid-index state) (active-grid state) x y)]
@@ -56,6 +50,8 @@
 
 (defn row    [state n] (grid/row (grid-index state) (active-grid state) n))
 (defn column [state n] (grid/col (grid-index state) (active-grid state) n))
+
+(defn absolute-column [state n] (grid/absolute-column (grid-index state) (active-grid state) n))
 
 (defn column-off [state col]
   (let [grid (active-grid state)
