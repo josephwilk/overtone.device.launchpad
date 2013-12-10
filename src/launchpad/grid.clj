@@ -3,8 +3,6 @@
 
 (defn fn-grid [] {})
 
-(def side-btns 8)
-
 (def grid-width 8)
 (def grid-height 8)
 
@@ -108,8 +106,8 @@
   [grid y] (nth grid y))
 
 (defn write-complete-grid-row [grid y row]
-  (when-not (= (count row) (- (x-max grid) (x-page-count grid)))
-    (throw+ {:type ::DifferingRowSize :hint (str "row must match grid row size. The grid has rows: " (- (x-max grid) (x-page-count grid)) " passed row has: " (count row))}))
+  (when-not (= (count row) (x-max grid))
+    (throw+ {:type ::DifferingRowSize :hint (str "row must match grid row size. The grid has rows: " (x-max grid) " passed row has: " (count row))}))
   (assoc (vec grid) y (map int (mapcat #(concat % [1]) (split-at grid-width row)))))
 
 (defn shift-left [grid]
