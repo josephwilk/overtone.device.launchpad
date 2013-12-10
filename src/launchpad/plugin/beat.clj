@@ -17,7 +17,7 @@
 
 (defn- render-beats [{state :state :as lp} lp-sequencer last-col col previous-x current-x]
   (doseq [r (range 0 grid/grid-width)]
-    (when (state-maps/command-right-active? state r [0 0])
+    (when (state-maps/command-right-active? state r)
       (when (seq last-col)
         (if (= 1 (nth last-col r))
           (device/led-on lp [r (mod previous-x grid/grid-width)] 2 :green)
@@ -49,7 +49,7 @@
               active-page (int (/ current-x grid/grid-width))]
           (when (not= x active-page)
             (state-maps/set-position state active-page)
-            (doseq [r (range 0 (state-maps/y-max state))]
+            (doseq [r (range 0 grid/grid-width)]
               (when (state-maps/absolute-command-right-active? state r)
                 (device/render-row lp r 1 :green))))))
 

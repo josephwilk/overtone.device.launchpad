@@ -31,7 +31,7 @@
                                (drop (x-offset 0 x-pos))
                                (take grid-width)
                                seq)]
-              (or row (take grid-width (repeat 0)))))
+              (or new-row (take grid-width (repeat 0)))))
           (take grid-height (drop (y-offset 0 y-pos) full-grid)))))
 
 (defn x-page-count [grid] (int (/ (count (first grid)) grid-width)))
