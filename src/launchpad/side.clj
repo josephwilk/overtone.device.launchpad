@@ -1,5 +1,7 @@
 (ns launchpad.side)
 
+(def side-btn-height 8)
+
 (defn cell-idx [x x-pos] [x-pos x])
 
 (defn toggle [side x x-pos]
@@ -9,7 +11,7 @@
 
 (defn cell [side x x-pos] (get-in side (cell-idx x x-pos) 0))
 
-(defn absolute-cell [side x] (cell side (mod x 8) (int (/ x 8))))
+(defn absolute-cell [side x] (cell side (mod x side-btn-height) (int (/ x side-btn-height))))
 
 (defn absolute-on? [side x]
   (when-let [cell (not= 0 (absolute-cell side x))]

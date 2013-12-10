@@ -7,6 +7,7 @@
    [overtone.at-at :as at-at]
    [launchpad.device :as device]
    [launchpad.core :refer :all]
+   [launchpad.grid :as grid]
    [launchpad.state-maps :as state-maps]))
 
 (defn frames->ms
@@ -31,7 +32,7 @@
   [play-pos sample]
   (if (= (int play-pos) 0)
     0
-    (int (/ play-pos (/ (:duration sample) 8)))))
+    (int (/ play-pos (/ (:duration sample) (grid/grid-width))))))
 
 (defn start-point-for [row sample] (* row (/ (:size sample) 8)))
 
@@ -39,7 +40,7 @@
   (fn [_ _ _ ns]
     (when (state-maps/active-mode? (:state lp) mode)
       (let [new-cell (cell-from-playtime (int ns) sample)]
-        (doseq [col (remove #(= % new-cell) (range 0 8))]
+        (doseq [col (remove #(= % new-cell) (range 0 grid/grid-width))]
           (state-maps/set (:state lp) row col 0)
           (device/led-off lp [row col]))
         (when-not (state-maps/on? (:state lp) row new-cell)
