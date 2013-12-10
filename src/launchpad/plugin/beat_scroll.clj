@@ -28,7 +28,6 @@
         (when (= current-x (dec phrase-size))
           (doseq [idx (range 0 (state-maps/y-max state))]
             (when (state-maps/absolute-command-right-active? state idx)
-              (println (take phrase-size (state-maps/complete-row state idx)))
               (sequencer-write! lp-sequencer idx (take phrase-size (state-maps/complete-row state idx))))))
 
         (when-not (state-maps/session-mode? state)
