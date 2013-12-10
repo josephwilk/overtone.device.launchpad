@@ -1,6 +1,4 @@
 (ns launchpad.grid
-  "We refer to the 8x8 buttons as the Grid
-   and the full 9x9 (including side buttons as the Page"
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn fn-grid [] {})
