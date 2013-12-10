@@ -30,7 +30,6 @@
 
 (defn toggle-side! [state x]
   (let [new-side (side/toggle (active-side state) x (grid-y state))]
-    (println new-side)
     (swap! state assoc-in [(mode state) :side] new-side)))
 
 (defn on?
