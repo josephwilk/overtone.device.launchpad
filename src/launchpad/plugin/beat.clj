@@ -37,36 +37,39 @@
             all-patterns))
     (device/render-grid lp)))
 
-(defn grid-refresh [{state :state :as lp} lp-sequencer phrase-size mode]
-  (fn [beat]
-    (when (state-maps/active-mode? state mode)
-      (let [current-x (int (mod (dec beat) phrase-size))
-            previous-x (int (mod (- beat 2) phrase-size))
-            col (state-maps/column state current-x)
-            last-col (state-maps/column state previous-x)]
+(defn grid-refresh [beat {state :state :as lp} lp-sequencer phrase-size mode]
+  (when (state-maps/active-mode? state mode)
+    (let [current-x (int (mod (dec beat) phrase-size))
+          previous-x (int (mod (- beat 2) phrase-size))
+          col (state-maps/column state current-x)
+          last-col (state-maps/column state previous-x)]
 
-        (when-not (state-maps/session-mode? state)
-          (let [[x _] (state-maps/grid-index state)
-                active-page (int (/ current-x grid/grid-width))]
-            (when (not= x active-page)
-              (state-maps/set-position state active-page)
-              (doseq [r (range 0 state-maps/y-max state)]
-                (when (state-maps/absolute-command-right-active? state r)
-                  (device/render-row lp r 1 :green))))))
+      (when-not (state-maps/session-mode? state)
+        (let [[x _] (state-maps/grid-index state)
+              active-page (int (/ current-x grid/grid-width))]
+          (when (not= x active-page)
+            (state-maps/set-position state active-page)
+            (doseq [r (range 0 (state-maps/y-max state))]
+              (when (state-maps/absolute-command-right-active? state r)
+                (device/render-row lp r 1 :green))))))
 
-        ;;Refresh new patterns just before beat 0
-        ;;Ensures new patterns start on beat
-        (when (= current-x (dec phrase-size))
-          (doseq [idx (range 0 (state-maps/y-max state))]
-            (when (state-maps/absolute-command-right-active? state idx)
-              (sequencer-write! lp-sequencer idx (take phrase-size (state-maps/complete-row state idx))))))
+      ;;Refresh new patterns just before beat 0
+      ;;Ensures new patterns start on beat
+      (when (= current-x (dec phrase-size))
+        (doseq [idx (range 0 (state-maps/y-max state))]
+          (when (state-maps/absolute-command-right-active? state idx)
+            (sequencer-write! lp-sequencer idx (take phrase-size (state-maps/complete-row state idx))))))
 
-        (if (state-maps/session-mode? state)
-          (let [[x _] (state-maps/grid-index state)
-                current-page (int (/ current-x (grid/grid-width)))]
-            (when (= x current-page)
-              (render-beats lp lp-sequencer last-col col previous-x current-x)))
-          (render-beats lp lp-sequencer last-col col previous-x current-x))))))
+      (if (state-maps/session-mode? state)
+        (let [[x _] (state-maps/grid-index state)
+              current-page (int (/ current-x (grid/grid-width)))]
+          (when (= x current-page)
+            (render-beats lp lp-sequencer last-col col previous-x current-x)))
+        (render-beats lp lp-sequencer last-col col previous-x current-x)))))
+
+
+(defn grid-refresh-fn [{state :state :as lp} lp-sequencer phrase-size mode]
+  (fn [beat] (grid-refresh beat lp lp-sequencer phrase-size mode)))
 
 (defn setup-side-controls
   "Side controls toggle on or off a sequence row"

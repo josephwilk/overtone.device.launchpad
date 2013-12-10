@@ -229,7 +229,7 @@
 
   ;; Think of this as the event loop for the grid, triggered on a beat
   ;;(on-trigger count-trig-id (beat-scroll/grid-refresh lp lp-sequencer phrase-size) refresh-beat-key)
-  (on-trigger count-trig-id (beat/grid-refresh lp lp-sequencer phrase-size :right) refresh-beat-key)
+  (on-trigger count-trig-id (beat/grid-refresh-fn lp lp-sequencer phrase-size :right) refresh-beat-key)
 
   (beat/setup-side-controls :right lp-sequencer)
 
