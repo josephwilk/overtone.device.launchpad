@@ -148,4 +148,6 @@
 
 (defn shift-left [grid] (map #(concat % (take page-width (repeat 0))) grid))
 
-(defn shift-down [grid] (concat grid (repeat grid-height (take page-width (repeat 0)))))
+(defn shift-down [grid]
+  (let [x (x-page-count  grid)]
+    (concat grid (repeat grid-height (take (* x page-width) (repeat 0))))))
