@@ -94,7 +94,8 @@
   (e/on-event [:Launchpad :control :session]
               (fn [m]
                 (when (= (:val m) 1.0)
-                  (mode/trigger-binary-mode (:launchpad m) :session)))
+                  (mode/trigger-binary-mode (:launchpad m) :session)
+                  (device/render-grid (:launchpad m))))
               ::session-mode)
 
   (let [lp-id 0]
