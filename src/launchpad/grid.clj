@@ -92,7 +92,7 @@
   ([grid x] (col [0 0] grid x))
   ([[x-pos y-pos] grid x]
      (let [x-offset (x-offset x x-pos)]
-       (if (< x-offset (x-page-count grid))
+       (if (< x-offset (x-max grid))
          (map #(nth % x-offset) (drop (y-offset 0 y-pos) grid))
          (take grid-height (repeat 0))))))
 
