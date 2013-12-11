@@ -1,6 +1,18 @@
 (ns launchpad.sequencer
   (:use overtone.live))
 
+(defsynth phasor-skipping-sequencer
+  "Supports looping and jumping position"
+  [buf 0 rate 1 out-bus 0 start-point 0 bar-trg [0 :tr] loop? 0 amp 1.0 cb 0]
+  (let [ph (phasor:ar :trig bar-trg
+                      :rate (* rate (buf-rate-scale:kr buf))
+                      :start 0
+                      :end (buf-frames:kr buf)
+                      :reset-pos start-point)
+        br (buf-rd:ar 1 buf ph loop?)]
+    (out:kr cb (a2k ph))
+    (out out-bus (* amp br))))
+
 (defsynth skipping-sequencer
   "Supports looping and jumping position"
   [buf 0 rate 1 out-bus 0 start-point 0 bar-trg [0 :tr] loop? 0 vol 1.0 pan 0]
