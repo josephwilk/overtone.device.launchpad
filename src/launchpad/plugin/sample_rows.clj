@@ -58,7 +58,7 @@
     time-pool))
 
 (defn setup-row [lp sample-row mode idx]
-  (doseq [cell (range 0 8)]
+  (doseq [cell (range 0 grid/grid-width)]
     (bind mode (keyword (str idx "x" cell))
           (fn [lp] (start-at (:sequencer sample-row)
                             (start-point-for cell (:sample sample-row))
@@ -69,10 +69,10 @@
         (fn [lp]
           (if (state-maps/command-right-active? (:state lp) (:row sample-row))
             (do
-              (ctl (:sequencer sample-row) :start-point 0 :vol 1 :bar-trig 1)
+              (ctl (:sequencer sample-row) :start-point 0 :amp 1 :bar-trig 1)
               (reset! (:playtime sample-row) 0.0)
               (reset! (:start sample-row) (now)))
-            (ctl (:sequencer sample-row) :start-point 0 :bar-trig 0 :vol 0))))
+            (ctl (:sequencer sample-row) :start-point 0 :bar-trig 0 :amp 0))))
 
   (add-watch (:playtime sample-row)
              (keyword (str "sample-" idx "-" mode))
