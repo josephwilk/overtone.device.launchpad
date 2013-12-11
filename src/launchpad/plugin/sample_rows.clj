@@ -10,75 +10,52 @@
    [launchpad.grid :as grid]
    [launchpad.state-maps :as state-maps]))
 
-(defn frames->ms
-  "Convert frames to ms for a sample"
-  [frame sample] (/ frame (/ (:size sample) (* 1000 (:duration sample)))))
-
-(defn play-position
-  "return current play position in seconds"
-  [start-time sample]
-  (let [elapsed-ms (- (now) @start-time)
-        elapsed-s (/ elapsed-ms 1000)]
-    (mod elapsed-s (:duration sample))))
-
-(defn start-at
-  "Start player at specified start point expressed in frames"
-  [player start-frame sample start-timestamp]
-  (reset! start-timestamp (- (now) (frames->ms start-frame sample)))
-  (ctl player :start-point start-frame :bar-trg 1))
-
-(defn cell-from-playtime
+(defn- cell-from-playtime
   "return active cell based on play position in seconds"
-  [play-pos sample]
-  (if (= (int play-pos) 0)
+  [frame-pos sample]
+  (if (= (int frame-pos) 0)
     0
-    (int (/ play-pos (/ (:duration sample) grid/grid-width)))))
+    (int (/ frame-pos (/ (:size sample) grid/grid-width)))))
 
-(defn start-point-for [row sample] (* row (/ (:size sample) 8)))
+(defn- start-point-for
+  "frame position for cell x "
+  [x sample]
+  (* x (/ (:size sample) grid/grid-width)))
+
+(defn- color [{state :state :as lp} row]
+  (if (state-maps/absolute-command-right-active? state row)
+    :green
+    :amber))
 
 (defn sample-watch-fn [lp sample row mode]
-  (fn [_ _ _ ns]
+  (fn [ref _ _ frame]
     (when (state-maps/active-mode? (:state lp) mode)
-      (let [new-cell (cell-from-playtime (int ns) sample)]
+      (let [new-cell (cell-from-playtime frame sample)]
         (doseq [col (remove #(= % new-cell) (range 0 grid/grid-width))]
           (state-maps/set (:state lp) row col 0)
           (device/led-off lp [row col]))
         (when-not (state-maps/on? (:state lp) row new-cell)
           (state-maps/set (:state lp) row new-cell 1)
-          (device/led-on lp [row new-cell] 3 :green))))))
-
-(defonce time-pool (at-at/mk-pool))
-
-(defn setup-event-loop [lp samples mode]
-  (at-at/every 100
-               #(when (state-maps/active-mode? (:state lp) mode)
-                  (doseq [sample-row samples]
-                    (when (state-maps/command-right-active? (:state lp) (:row sample-row))
-                      (reset! (:playtime sample-row) (play-position (:start sample-row) (:sample sample-row))))))
-    time-pool))
+          (device/led-on lp [row new-cell] 3 (color lp row)))))))
 
 (defn setup-row [lp sample-row mode idx]
-  (doseq [cell (range 0 grid/grid-width)]
-    (bind mode (keyword (str idx "x" cell))
-          (fn [lp] (start-at (:sequencer sample-row)
-                            (start-point-for cell (:sample sample-row))
-                            (:sample sample-row)
-                            (:start sample-row)))))
+  (let [cb (control-bus)
+        cb-monitor (control-bus-monitor cb)]
+    (ctl (:sequencer sample-row) :cb cb)
 
-  (bind mode (nth device/side-controls idx)
-        (fn [lp]
-          (if (state-maps/command-right-active? (:state lp) (:row sample-row))
-            (do
+    (doseq [cell (range 0 grid/grid-width)]
+      (bind mode (keyword (str idx "x" cell))
+            (fn [lp] (ctl (:sequencer sample-row) :start-point (start-point-for cell (:sample sample-row)) :bar-trg 1))))
+
+    (bind mode (nth device/side-controls idx)
+          (fn [lp]
+            (if (state-maps/absolute-command-right-active? (:state lp) (:row sample-row))
               (ctl (:sequencer sample-row) :start-point 0 :amp 1 :bar-trig 1)
-              (reset! (:playtime sample-row) 0.0)
-              (reset! (:start sample-row) (now)))
-            (ctl (:sequencer sample-row) :start-point 0 :bar-trig 0 :amp 0))))
+              (ctl (:sequencer sample-row) :start-point 0 :bar-trig 0 :amp 0))))
 
-  (add-watch (:playtime sample-row)
-             (keyword (str "sample-" idx "-" mode))
-             (sample-watch-fn lp (:sample sample-row) (:row sample-row) mode)))
+    (add-watch cb-monitor (keyword (str "sample-" idx "-" mode))
+               (sample-watch-fn lp (:sample sample-row) (:row sample-row) mode))))
 
 (defn sample-rows [lp mode samples]
-  (doseq [[idx sample]
-          (map vector (iterate inc 0) samples)] (setup-row lp sample mode idx))
-  (setup-event-loop lp samples mode))
+  (doseq [[idx sample] (map vector (iterate inc 0) samples)]
+    (setup-row lp sample mode idx)))
