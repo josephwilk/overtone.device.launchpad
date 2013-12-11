@@ -32,7 +32,7 @@
   [play-pos sample]
   (if (= (int play-pos) 0)
     0
-    (int (/ play-pos (/ (:duration sample) (grid/grid-width))))))
+    (int (/ play-pos (/ (:duration sample) grid/grid-width)))))
 
 (defn start-point-for [row sample] (* row (/ (:size sample) 8)))
 
