@@ -57,11 +57,18 @@
                                  [0 0 1]])
 
 (facts "out of bound cordinates"
-  (fact "col"
+  (fact "absolute-column returns all 0s"
+        (grid/absolute-column [0 0]
+                              [[0 0 0 0 0 0 0 0 0]
+                               [0 0 0 0 0 0 0 0 0]]
+                               9) => [0 0 0 0 0 0 0 0])
+
+  (fact "col returns all 0s"
     (grid/col [[0 0 1]
                [0 0 0]
                [0 0 1]] 2) => [1 0 1]
 
     (grid/col [[0 0 0]
                [0 0 0
-                [0 0 0]]] 4) => [0 0 0 0 0 0 0 0]))
+               [0 0 0]]] 4) => [0 0 0 0 0 0 0 0]))
+

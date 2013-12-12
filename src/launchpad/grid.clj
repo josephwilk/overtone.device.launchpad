@@ -98,8 +98,9 @@
   (let [grid-x (cond
                 (> x grid-width) (int (dec (+ (/ x grid-width) x)))
                 true x)]
-    (when (< grid-x (count (first grid)))
-      (map #(nth % grid-x) (take grid-height (drop (y-offset 0 y-pos) grid))))))
+    (if (< grid-x (x-max grid))
+      (map #(nth % grid-x) (take grid-height (drop (y-offset 0 y-pos) grid)))
+      (take grid-height (repeat 0)))))
 
 (defn complete-row
   "Direct access into the entire grid, ignores any grid position"
