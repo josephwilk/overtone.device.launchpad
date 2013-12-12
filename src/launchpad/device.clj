@@ -161,11 +161,11 @@
   (doseq [row (range 0 grid/grid-width)] (led-off lp [row side-grid/side-btn-height])))
 
 (defn render-row
-  ([launchpad row] (render-row launchpad row 3 :amber))
-  ([launchpad row intensity color]
+  ([launchpad y] (render-row launchpad y 3 :amber))
+  ([launchpad y intensity color]
      (let [grid (seq (state-maps/active-page (:state launchpad)))]
        (doseq [x (range grid/grid-width)]
-         (toggle-led launchpad [row x] (grid/cell grid row x) intensity color))))
+         (toggle-led launchpad [y x] (grid/cell grid y x) intensity color))))
   ([launchpad row-data y intensity color]
      (doseq [x (range 0 grid/grid-width)]
        (toggle-led launchpad [y x] (nth row-data x) intensity color))))
