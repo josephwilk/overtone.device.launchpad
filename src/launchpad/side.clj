@@ -5,7 +5,7 @@
 (defn empty [] [[0 0 0 0 0 0 0 0]])
 
 (defn toggle [side x x-pos]
-  (let [old-cell (get-in side (cell-idx x x-pos))
+  (let [old-cell (get-in side [x-pos x])
         new-cell (if (= 1 old-cell) 0 1)]
     (assoc-in side [x-pos x] new-cell)))
 
