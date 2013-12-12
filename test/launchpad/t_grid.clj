@@ -2,25 +2,26 @@
   (:require [midje.sweet :refer :all]
             [launchpad.grid :as grid]))
 
-(facts "chaning a grid with a index position"
-  (fact "toogle respects current index position"
-    (grid/toggle [0 0] [[0 0 0 0 0 0 0 0]
-                        [0 0 0 0 0 0 0 0]
-                        [0 0 0 0 0 0 0 0]
-                        [0 0 0 0 0 0 0 0]
-                        [0 0 0 0 0 0 0 0]
-                        [0 0 0 0 0 0 0 0]
-                        [0 0 0 0 0 0 0 0]
-                        [0 0 0 0 0 0 0 0]] 1 1) =>
+(def empty-8x8-grid
+  [[0 0 0 0 0 0 0 0]
+   [0 0 0 0 0 0 0 0]
+   [0 0 0 0 0 0 0 0]
+   [0 0 0 0 0 0 0 0]
+   [0 0 0 0 0 0 0 0]
+   [0 0 0 0 0 0 0 0]
+   [0 0 0 0 0 0 0 0]
+   [0 0 0 0 0 0 0 0]])
 
-                        [[0 0 0 0 0 0 0 0]
-                         [0 1 0 0 0 0 0 0]
-                         [0 0 0 0 0 0 0 0]
-                         [0 0 0 0 0 0 0 0]
-                         [0 0 0 0 0 0 0 0]
-                         [0 0 0 0 0 0 0 0]
-                         [0 0 0 0 0 0 0 0]
-                         [0 0 0 0 0 0 0 0]]
+(facts "changing a grid with a index position"
+  (fact "toogle respects current index position"
+    (grid/toggle [0 0] empty-8x8-grid 1 1) => [[0 0 0 0 0 0 0 0]
+                                               [0 1 0 0 0 0 0 0]
+                                               [0 0 0 0 0 0 0 0]
+                                               [0 0 0 0 0 0 0 0]
+                                               [0 0 0 0 0 0 0 0]
+                                               [0 0 0 0 0 0 0 0]
+                                               [0 0 0 0 0 0 0 0]
+                                               [0 0 0 0 0 0 0 0]]
 
     (grid/toggle [1 0] [[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
                         [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
@@ -72,3 +73,11 @@
                [0 0 0
                [0 0 0]]] 4) => [0 0 0 0 0 0 0 0]))
 
+
+(facts "shift-left"
+  (fact "adds 8 new cells to every row"
+    (grid/shift-left empty-8x8-grid) =>  (n-of [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0] 8)))
+
+(facts "shift-down"
+  (fact "adds 8 new rows"
+    (grid/shift-down empty-8x8-grid) => (n-of [0 0 0 0 0 0 0 0] 16)))

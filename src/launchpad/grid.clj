@@ -3,7 +3,7 @@
 
 (defn fn-grid [] {})
 
-(def grid-width 8)
+(def grid-width  8)
 (def grid-height 8)
 
 (defn empty []
