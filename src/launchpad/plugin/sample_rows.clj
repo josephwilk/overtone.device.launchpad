@@ -34,30 +34,31 @@
       (let [new-cell (cell-from-playtime frame sample)
             grid-y (mod y grid/grid-height)]
         (doseq [x (remove #(= % new-cell) (range 0 grid/grid-width))]
-          (state-maps/set state y x 0)
+          (state-maps/set state grid-y x 0)
           (device/led-off lp [grid-y x]))
-        (when-not (state-maps/on? state y new-cell)
-          (state-maps/set state y new-cell 1)
+        (when-not (state-maps/on? state grid-y new-cell)
+          (state-maps/set state grid-y new-cell 1)
           (device/led-on lp [grid-y new-cell] 3 (color state y)))))))
 
 (defn setup-row [lp sample-row mode idx]
   (let [cb (control-bus)
-        cb-monitor (control-bus-monitor cb)]
+        cb-monitor (control-bus-monitor cb)
+        page (int (/ idx grid/grid-height))
+        grid-y (mod idx grid/grid-height)]
+
     (ctl (:sequencer sample-row) :cb cb)
 
     (doseq [cell (range 0 grid/grid-width)]
-      (bind mode (keyword (str idx "x" cell))
+      (bind [mode page] (keyword (str grid-y "x" cell))
             (fn [lp] (ctl (:sequencer sample-row) :start-point (start-point-for cell (:sample sample-row)) :bar-trg 1))))
 
-    (bind mode (nth device/side-controls idx)
+    (bind [mode page] (nth device/side-controls grid-y)
           (fn [lp]
-            (if (state-maps/absolute-command-right-active? (:state lp) (:row sample-row))
+            (if (state-maps/absolute-command-right-active? (:state lp) idx)
               (ctl (:sequencer sample-row) :start-point 0 :amp 1 :bar-trig 1)
               (ctl (:sequencer sample-row) :start-point 0 :bar-trig 0 :amp 0))))
 
     (add-watch cb-monitor (keyword (str "sample-" idx "-" mode))
-               (sample-watch-fn lp (:sample sample-row) (:row sample-row) mode))))
+               (sample-watch-fn lp (:sample sample-row) idx mode))))
 
-(defn sample-rows [lp mode samples]
-  (doseq [[idx sample] (map vector (iterate inc 0) samples)]
-    (setup-row lp sample mode idx)))
+(defn sample-rows [lp mode samples]  (doseq [sample samples] (setup-row lp sample mode (:row sample))))

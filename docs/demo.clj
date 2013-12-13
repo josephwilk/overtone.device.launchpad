@@ -52,20 +52,32 @@
   (def memory-moon-s (sample (freesound-path 27567)))
   (def retweak-s     (sample (freesound-path 25921)))
 
-  (def phat        (phasor-skipping-sequencer :buf (to-sc-id phat-s) :loop? true :bar-trg 0 :out-bus 0 :amp 0))
-  (def groove      (phasor-skipping-sequencer :buf (to-sc-id groove-s) :loop? true :bar-trg 0 :out-bus 0 :amp 0))
-  (def funky       (phasor-skipping-sequencer :buf (to-sc-id funky-s) :loop? true :bar-trg 0 :out-bus 0 :amp 0))
-  (def memory-moon (phasor-skipping-sequencer :buf (to-sc-id memory-moon-s) :loop? true :bar-trg 0 :out-bus 0 :amp 0))
-  (def retweak     (phasor-skipping-sequencer :buf (to-sc-id retweak-s) :loop? true :bar-trg 0 :out-bus 0 :amp 0))
-
-  (def phat-row        {:row 0 :sample phat-s        :sequencer phat})
-  (def groove-row      {:row 1 :sample groove-s      :sequencer groove})
-  (def funky-row       {:row 2 :sample funky-s       :sequencer funky})
-  (def memory-moon-row {:row 3 :sample memory-moon-s :sequencer memory-moon})
-  (def retweak-row     {:row 4 :sample retweak-s     :sequencer retweak})
-
   (use 'launchpad.plugin.sample-rows :reload)
-  (sample-rows lp :left [phat-row groove-row funky-row memory-moon-row retweak-row])
+
+  (def sample-selection [phat-s
+                         groove-s
+                         funky-s
+                         memory-moon-s
+                         retweak-s
+                         retweak-s
+                         retweak-s
+                         retweak-s
+                         retweak-s
+                         retweak-s])
+
+  (def all-row-samples
+    (doall (map-indexed
+            (fn [idx sample] {:row idx
+                             :sample sample
+                             :sequencer (phasor-skipping-sequencer
+                                         :buf (to-sc-id sample)
+                                         :loop? true
+                                         :bar-trg 0
+                                         :amp 0
+                                         :out-bus 0)})
+            sample-selection)))
+
+  (sample-rows lp :left all-row-samples)
 
   ;;Playing
 

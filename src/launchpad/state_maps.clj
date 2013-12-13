@@ -38,8 +38,8 @@
 
 (defn visible? [state x y]
   (let [[x-pos y-pos] (grid-index state)]
-    (and (= (int (/ x grid/grid-width))  x-pos)
-         (= (int (/ y grid/grid-height)) y-pos))))
+    (and (= x-pos (int (/ x grid/grid-width)))
+         (= y-pos (int (/ y grid/grid-height))))))
 
 (defn set [state x y value]
   (swap! state assoc-in [(mode state) :grid] (grid/set (grid-index state) (active-grid state) x y value)))
