@@ -22,21 +22,23 @@
   [x sample]
   (* x (/ (:size sample) grid/grid-width)))
 
-(defn- color [{state :state :as lp} row]
+(defn- color [state row]
   (if (state-maps/absolute-command-right-active? state row)
     :green
     :amber))
 
-(defn sample-watch-fn [lp sample row mode]
+(defn sample-watch-fn [{state :state :as lp} sample y mode]
   (fn [ref _ _ frame]
-    (when (state-maps/active-mode? (:state lp) mode)
-      (let [new-cell (cell-from-playtime frame sample)]
-        (doseq [col (remove #(= % new-cell) (range 0 grid/grid-width))]
-          (state-maps/set (:state lp) row col 0)
-          (device/led-off lp [row col]))
-        (when-not (state-maps/on? (:state lp) row new-cell)
-          (state-maps/set (:state lp) row new-cell 1)
-          (device/led-on lp [row new-cell] 3 (color lp row)))))))
+    (when (and (state-maps/active-mode? state mode)
+               (state-maps/visible? state 0 y))
+      (let [new-cell (cell-from-playtime frame sample)
+            grid-y (mod y grid/grid-height)]
+        (doseq [x (remove #(= % new-cell) (range 0 grid/grid-width))]
+          (state-maps/set state y x 0)
+          (device/led-off lp [grid-y x]))
+        (when-not (state-maps/on? state y new-cell)
+          (state-maps/set state y new-cell 1)
+          (device/led-on lp [grid-y new-cell] 3 (color state y)))))))
 
 (defn setup-row [lp sample-row mode idx]
   (let [cb (control-bus)

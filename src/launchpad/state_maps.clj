@@ -36,6 +36,11 @@
   ([state x y] (on? state x y (grid-index state)))
   ([state x y grid-index] (grid/on? grid-index (active-grid state) x y)))
 
+(defn visible? [state x y]
+  (let [[x-pos y-pos] (grid-index state)]
+    (and (= (int (/ x grid/grid-width))  x-pos)
+         (= (int (/ y grid/grid-height)) y-pos))))
+
 (defn set [state x y value]
   (swap! state assoc-in [(mode state) :grid] (grid/set (grid-index state) (active-grid state) x y value)))
 
