@@ -77,6 +77,6 @@ lein repl
 
 ## License
 
-Copyright © 2013 Joseph Wilk
+Copyright © 2014 Joseph Wilk
 
 Distributed under the Eclipse Public License, the same as Clojure.
